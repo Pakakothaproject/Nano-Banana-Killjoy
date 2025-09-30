@@ -228,18 +228,18 @@ const App: React.FC = () => {
     setBaseGeneratedImages(newImages);
     setActiveImageIndex(0);
     newImages.forEach(image => {
-        uploadToCloudinary(image).catch(err => {});
+        uploadToCloudinary(image, ['Generation']).catch(err => {});
     });
   }, [history, historyIndex, clearGeneratedVideo]);
   
-  const resetHistory = useCallback((initialImages: string[]) => {
+  const resetHistory = useCallback((initialImages: string[], tag: string = 'Generation') => {
     clearGeneratedVideo();
     setHistory([initialImages]);
     setHistoryIndex(0);
     setBaseGeneratedImages(initialImages);
     setActiveImageIndex(0);
     initialImages.forEach(image => {
-        uploadToCloudinary(image).catch(err => {});
+        uploadToCloudinary(image, [tag]).catch(err => {});
     });
   }, [clearGeneratedVideo]);
 
@@ -258,7 +258,7 @@ const App: React.FC = () => {
       };
       img.src = dataUrl;
       
-      resetHistory([dataUrl]);
+      resetHistory([dataUrl], 'Upload');
       
       setEditPrompt('');
       setAccessoryPrompt('');
@@ -1238,7 +1238,7 @@ const handleCompleteSceneSwap = useCallback(async () => {
           setGeneratorImages(results);
           addLog('Modal image generation successful.');
           results.forEach(image => {
-              uploadToCloudinary(image).catch(err => {});
+              uploadToCloudinary(image, ['Generation']).catch(err => {});
           });
       } catch (err) {
           const errorMsg = `Generation failed: ${err instanceof Error ? err.message : 'An unknown error occurred.'}`;

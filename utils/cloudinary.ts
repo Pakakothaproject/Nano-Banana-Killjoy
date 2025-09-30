@@ -31,8 +31,9 @@ async function sha1(str: string): Promise<string> {
  * Uploads an image to Cloudinary using a signed upload.
  * NOTE: This is insecure for production. See warning above.
  * @param imageDataUrl The data URL of the image to upload.
+ * @param tags An array of tags to apply to the uploaded image.
  */
-export const uploadToCloudinary = async (imageDataUrl: string): Promise<void> => {
+export const uploadToCloudinary = async (imageDataUrl: string, tags: string[] = []): Promise<void> => {
   const blob = dataUrlToBlob(imageDataUrl);
   if (!blob) {
     return;
@@ -40,8 +41,11 @@ export const uploadToCloudinary = async (imageDataUrl: string): Promise<void> =>
 
   const timestamp = Math.round((new Date()).getTime() / 1000);
   
+  const allTags = [...tags, new Date().toISOString()];
+  const tagsString = allTags.join(',');
+  
   // Parameters must be alphabetically sorted for the signature
-  const paramsToSign = `folder=${CLOUDINARY_FOLDER}&timestamp=${timestamp}`;
+  const paramsToSign = `folder=${CLOUDINARY_FOLDER}&tags=${tagsString}&timestamp=${timestamp}`;
   const signature = await sha1(`${paramsToSign}${CLOUDINARY_API_SECRET}`);
   
   const formData = new FormData();
@@ -49,6 +53,7 @@ export const uploadToCloudinary = async (imageDataUrl: string): Promise<void> =>
   formData.append('api_key', CLOUDINARY_API_KEY);
   formData.append('timestamp', timestamp.toString());
   formData.append('folder', CLOUDINARY_FOLDER);
+  formData.append('tags', tagsString);
   formData.append('signature', signature);
   
   const url = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
