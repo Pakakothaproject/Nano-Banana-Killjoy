@@ -3,7 +3,7 @@ import { TabButton } from './TabButton';
 import { ImageUploader } from './ImageUploader';
 import {
     WandIcon, SlidersIcon, CameraIcon, MessageSquareIcon, FilmIcon, JewelryIcon, BoxIcon, CrosshairIcon, XIcon,
-    BrushIcon, BrightnessIcon, ContrastIcon, CopyrightIcon, SaveIcon, TrashIcon
+    BrushIcon, BrightnessIcon, ContrastIcon, CopyrightIcon, SaveIcon, TrashIcon, RefreshCcwIcon
 } from './Icons';
 import type { UploadedImage } from '../types';
 import type { Bubble } from '../App';
@@ -53,6 +53,8 @@ interface StudioPanelProps {
     setAnimationPrompt: (prompt: string) => void;
     handleAnimateImage: () => void;
     loadingMessage: string | null;
+    isRephrasingEdit: boolean;
+    handleRephraseEditPrompt: () => void;
 }
 
 export const StudioPanel: React.FC<StudioPanelProps> = ({
@@ -62,7 +64,7 @@ export const StudioPanel: React.FC<StudioPanelProps> = ({
     handleStageProduct, brightness, setBrightness, contrast, setContrast, grainIntensity, setGrainIntensity, handleMakePortrait,
     handleBackgroundChange, isWatermarkEnabled, setIsWatermarkEnabled, bubbles, handleAddBubble, handleApplyBubbles,
     selectedBubbleId, setSelectedBubbleId, handleDeleteBubble, selectedBubble, handleUpdateBubble, animationPrompt,
-    setAnimationPrompt, handleAnimateImage, loadingMessage
+    setAnimationPrompt, handleAnimateImage, loadingMessage, isRephrasingEdit, handleRephraseEditPrompt
 }) => {
     const showProductUploader = productPrompt.includes('@object');
     const showAccessoryUploader = accessoryPrompt.includes('@accessory');
@@ -101,9 +103,20 @@ export const StudioPanel: React.FC<StudioPanelProps> = ({
                                 <button onClick={() => setSelectedPoint(null)} className="neo-button neo-icon-button neo-button-secondary" aria-label="Clear selected point"><XIcon /></button>
                             )}
                             </div>
+                            <textarea
+                                value={editPrompt}
+                                onChange={e => setEditPrompt(e.target.value)}
+                                className="neo-textarea w-full"
+                                placeholder="e.g., make the shirt red"
+                                rows={3}
+                            />
                             <div className="flex gap-2">
-                                <input type="text" value={editPrompt} onChange={e => setEditPrompt(e.target.value)} className="neo-input w-full" placeholder="e.g., make the shirt red" />
-                                <button onClick={handleEditImage} disabled={!editPrompt} className="neo-button neo-button-primary"><WandIcon /></button>
+                                <button onClick={handleRephraseEditPrompt} disabled={!editPrompt || isRephrasingEdit || !!loadingMessage} className="w-full neo-button neo-button-secondary" title="Rephrase prompt for a more creative result">
+                                    <RefreshCcwIcon /> Rephrase
+                                </button>
+                                <button onClick={handleEditImage} disabled={!editPrompt || !!loadingMessage} className="w-full neo-button neo-button-primary" title="Apply Edit">
+                                    <WandIcon /> Apply
+                                </button>
                             </div>
                             {selectedPoint && <p className="text-xs text-center font-semibold text-[var(--nb-primary)] animate-fade-in">✓ Point selected. Edit will be applied here.</p>}
 

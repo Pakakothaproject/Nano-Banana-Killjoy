@@ -9,42 +9,11 @@ import { ExpandedImageModal } from './components/ExpandedImageModal';
 import { InpaintingModal } from './components/InpaintingModal';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { AlertTriangleIcon, DownloadIcon, ImageIcon, SparklesIcon, UserIcon, XIcon } from './components/Icons';
+import { loadImage, getMaskBoundingBox, addPaddingToBox, cropImage, pasteImage } from './utils';
+import type { BoundingBox } from './utils';
 
 const WATERMARK_URL = 'https://vectorseek.com/wp-content/uploads/2023/08/Blacked-Logo-Vector.svg-.png';
 const BUBBLE_IMAGE_URL = 'https://static.vecteezy.com/system/resources/thumbnails/045/925/602/small/black-and-white-color-speech-bubble-balloon-icon-sticker-memo-keyword-planner-text-box-banner-png.png';
-
-const loadImage = (src: string): Promise<HTMLImageElement> => {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.onload = () => resolve(img);
-        img.onerror = (err) => reject(err);
-        img.src = src;
-    });
-};
-
-export const fetchImageAsUploadedImage = async (url: string): Promise<UploadedImage> => {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch image. Status: ${response.statusText}`);
-  }
-  const blob = await response.blob();
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const dataUrl = reader.result as string;
-      const match = dataUrl.match(/^data:(.+);base64,(.+)$/);
-      if (match) {
-        const [, type, base64] = match;
-        resolve({ base64, type });
-      } else {
-        reject(new Error('Failed to parse data URL.'));
-      }
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-};
 
 export interface Bubble {
   id: number;
@@ -57,104 +26,6 @@ export interface Bubble {
   textSize: number; // percentage of bubble width
 }
 
-
-// --- Inpainting Helper Functions ---
-
-type BoundingBox = { x: number; y: number; width: number; height: number; };
-
-/**
- * Analyzes a mask image and returns the bounding box of the non-black areas.
- */
-const getMaskBoundingBox = async (maskDataUrl: string): Promise<BoundingBox | null> => {
-  const img = await loadImage(maskDataUrl);
-  const canvas = document.createElement('canvas');
-  canvas.width = img.naturalWidth;
-  canvas.height = img.naturalHeight;
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  if (!ctx) return null;
-
-  ctx.drawImage(img, 0, 0);
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = imageData.data;
-
-  let minX = canvas.width, minY = canvas.height, maxX = 0, maxY = 0;
-  let hasMask = false;
-
-  for (let y = 0; y < canvas.height; y++) {
-    for (let x = 0; x < canvas.width; x++) {
-      const i = (y * canvas.width + x) * 4;
-      // Check if pixel is not black (R, G, or B is not 0)
-      if (data[i] > 0 || data[i + 1] > 0 || data[i + 2] > 0) {
-        hasMask = true;
-        minX = Math.min(minX, x);
-        minY = Math.min(minY, y);
-        maxX = Math.max(maxX, x);
-        maxY = Math.max(maxY, y);
-      }
-    }
-  }
-
-  if (!hasMask) return null;
-
-  return { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
-};
-
-
-/**
- * Adds padding to a bounding box, clamped to the image dimensions.
- */
-const addPaddingToBox = (box: BoundingBox, imageDims: { width: number; height: number; }, padding: number): BoundingBox => {
-  const newX = Math.max(0, box.x - padding);
-  const newY = Math.max(0, box.y - padding);
-  const newMaxX = Math.min(imageDims.width, box.x + box.width + padding);
-  const newMaxY = Math.min(imageDims.height, box.y + box.height + padding);
-
-  return {
-    x: newX,
-    y: newY,
-    width: newMaxX - newX,
-    height: newMaxY - newY,
-  };
-};
-
-/**
- * Crops an image from a data URL to the specified bounding box.
- */
-const cropImage = async (imageDataUrl: string, box: BoundingBox): Promise<string> => {
-  const img = await loadImage(imageDataUrl);
-  const canvas = document.createElement('canvas');
-  canvas.width = box.width;
-  canvas.height = box.height;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('Could not get canvas context for cropping.');
-  
-  ctx.drawImage(img, box.x, box.y, box.width, box.height, 0, 0, box.width, box.height);
-  return canvas.toDataURL('image/png');
-};
-
-/**
- * Pastes a cropped image onto a base image at the specified coordinates.
- */
-const pasteImage = async (baseImageDataUrl: string, cropDataUrl: string, box: BoundingBox): Promise<string> => {
-    const [baseImg, cropImg] = await Promise.all([
-        loadImage(baseImageDataUrl),
-        loadImage(cropDataUrl),
-    ]);
-
-    const canvas = document.createElement('canvas');
-    canvas.width = baseImg.naturalWidth;
-    canvas.height = baseImg.naturalHeight;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('Could not get canvas context for pasting.');
-    
-    // Draw the original image first
-    ctx.drawImage(baseImg, 0, 0);
-
-    // Then draw the edited crop on top at the correct location
-    ctx.drawImage(cropImg, box.x, box.y, box.width, box.height);
-
-    return canvas.toDataURL('image/png');
-};
 
 // --- Generator Modal Component ---
 interface GeneratorModalProps {
@@ -333,6 +204,7 @@ const App: React.FC = () => {
   const [generatorImages, setGeneratorImages] = useState<string[] | null>(null);
   const [isGeneratingInModal, setIsGeneratingInModal] = useState<boolean>(false);
   const [generatorError, setGeneratorError] = useState<string | null>(null);
+  const [isRephrasingEdit, setIsRephrasingEdit] = useState<boolean>(false);
 
 
   useEffect(() => {
@@ -412,7 +284,7 @@ const App: React.FC = () => {
 
   const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
 
-  const updateHistory = (newImages: string[]) => {
+  const updateHistory = useCallback((newImages: string[]) => {
     clearGeneratedVideo();
     const newHistory = history.slice(0, historyIndex + 1);
     newHistory.push(newImages);
@@ -420,15 +292,15 @@ const App: React.FC = () => {
     setHistoryIndex(newHistory.length - 1);
     setBaseGeneratedImages(newImages);
     setActiveImageIndex(0);
-  };
+  }, [history, historyIndex, clearGeneratedVideo]);
   
-  const resetHistory = (initialImages: string[]) => {
+  const resetHistory = useCallback((initialImages: string[]) => {
     clearGeneratedVideo();
     setHistory([initialImages]);
     setHistoryIndex(0);
     setBaseGeneratedImages(initialImages);
     setActiveImageIndex(0);
-  };
+  }, [clearGeneratedVideo]);
 
   const handleModelImageUpload = useCallback((image: UploadedImage | null) => {
     clearGeneratedVideo();
@@ -445,10 +317,7 @@ const App: React.FC = () => {
       };
       img.src = dataUrl;
       
-      setBaseGeneratedImages([dataUrl]);
-      setActiveImageIndex(0);
-      setHistory([]);
-      setHistoryIndex(-1);
+      resetHistory([dataUrl]);
       
       setEditPrompt('');
       setAccessoryPrompt('');
@@ -475,7 +344,7 @@ const App: React.FC = () => {
       setHistoryIndex(-1);
       setImageAspectRatio('4 / 5');
     }
-  }, [addLog, clearGeneratedVideo]);
+  }, [addLog, clearGeneratedVideo, resetHistory]);
 
   useEffect(() => {
     if (!baseGeneratedImages || baseGeneratedImages.length === 0) {
@@ -612,7 +481,7 @@ const App: React.FC = () => {
       addLog(errorMsg);
       setLoadingMessage(null);
     }
-  }, [apiKey, modelImage, originalModelImage, isPoseLocked, addLog, setErrorAndLog, targetPersonPoint, clearGeneratedVideo, numberOfImages]);
+  }, [apiKey, modelImage, originalModelImage, isPoseLocked, addLog, setErrorAndLog, targetPersonPoint, clearGeneratedVideo, numberOfImages, resetHistory]);
   
   const handleImageClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!imageDisplayRef.current) return;
@@ -1052,7 +921,7 @@ const App: React.FC = () => {
             setLoadingMessage(null);
         }
     }
-}, [apiKey, originalModelImage, environmentImage, isStrictFaceEnabled, isTwoStageSwap, addLog, setErrorAndLog, clearGeneratedVideo, numberOfImages]);
+}, [apiKey, originalModelImage, environmentImage, isStrictFaceEnabled, isTwoStageSwap, addLog, setErrorAndLog, clearGeneratedVideo, numberOfImages, resetHistory]);
 
 const handleAutoSceneSwapGenerate = useCallback(async () => {
     if (!originalModelImage || !environmentImage) {
@@ -1084,7 +953,7 @@ const handleAutoSceneSwapGenerate = useCallback(async () => {
         setErrorAndLog(errorMsg);
         setLoadingMessage(null);
     }
-}, [apiKey, originalModelImage, environmentImage, isStrictFaceEnabled, addLog, setErrorAndLog, clearGeneratedVideo, numberOfImages]);
+}, [apiKey, originalModelImage, environmentImage, isStrictFaceEnabled, addLog, setErrorAndLog, clearGeneratedVideo, numberOfImages, resetHistory]);
 
 const handleParaphraseSceneDescription = useCallback(async () => {
     if (!sceneDescription) return;
@@ -1102,6 +971,23 @@ const handleParaphraseSceneDescription = useCallback(async () => {
         setIsParaphrasing(false);
     }
 }, [apiKey, sceneDescription, addLog, setErrorAndLog]);
+
+const handleRephraseEditPrompt = useCallback(async () => {
+    if (!editPrompt) return;
+    setIsRephrasingEdit(true);
+    setError(null);
+    addLog('Rephrasing edit prompt...');
+    try {
+        const paraphrased = await paraphraseDescription(apiKey, editPrompt);
+        setEditPrompt(paraphrased);
+        addLog('Rephrasing successful.');
+    } catch (err) {
+        const errorMsg = `Paraphrasing failed: ${err instanceof Error ? err.message : 'An unknown error occurred.'}`;
+        setErrorAndLog(errorMsg);
+    } finally {
+        setIsRephrasingEdit(false);
+    }
+}, [apiKey, editPrompt, addLog, setErrorAndLog]);
 
 const handleCompleteSceneSwap = useCallback(async () => {
     if (!originalModelImage || !sceneDescription || !environmentImage) {
@@ -1136,7 +1022,7 @@ const handleCompleteSceneSwap = useCallback(async () => {
         setSwapStage('initial');
         setSceneDescription('');
     }
-}, [apiKey, originalModelImage, sceneDescription, isStrictFaceEnabled, numberOfImages, addLog, setErrorAndLog, clearGeneratedVideo, environmentImage]);
+}, [apiKey, originalModelImage, sceneDescription, isStrictFaceEnabled, numberOfImages, addLog, setErrorAndLog, clearGeneratedVideo, environmentImage, resetHistory]);
   
   const handleMarketingGenerate = useCallback(async () => {
     if (!marketingPrompt || (marketingPrompt.includes('@product') && !marketingProductImage)) {
@@ -1163,7 +1049,7 @@ const handleCompleteSceneSwap = useCallback(async () => {
         setErrorAndLog(errorMsg);
         setLoadingMessage(null);
     }
-  }, [apiKey, marketingPrompt, marketingProductImage, leaveSpaceForText, addLog, setErrorAndLog, clearGeneratedVideo, numberOfImages]);
+  }, [apiKey, marketingPrompt, marketingProductImage, leaveSpaceForText, addLog, setErrorAndLog, clearGeneratedVideo, numberOfImages, resetHistory]);
 
   const handleHairStyleGenerate = useCallback(async () => {
     if (!originalModelImage || !hairStyleImage) {
@@ -1193,7 +1079,7 @@ const handleCompleteSceneSwap = useCallback(async () => {
         setErrorAndLog(errorMsg);
         setLoadingMessage(null);
     }
-  }, [apiKey, originalModelImage, hairStyleImage, addLog, setErrorAndLog, clearGeneratedVideo, numberOfImages]);
+  }, [apiKey, originalModelImage, hairStyleImage, addLog, setErrorAndLog, clearGeneratedVideo, numberOfImages, resetHistory]);
 
 
   const handleAddBubble = () => {
@@ -1560,6 +1446,8 @@ const handleCompleteSceneSwap = useCallback(async () => {
             handleAnimateImage={handleAnimateImage}
             logs={logs}
             setLogs={setLogs}
+            isRephrasingEdit={isRephrasingEdit}
+            handleRephraseEditPrompt={handleRephraseEditPrompt}
         />
 
         <RightPanel

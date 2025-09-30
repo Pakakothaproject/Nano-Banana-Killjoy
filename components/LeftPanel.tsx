@@ -8,7 +8,7 @@ import { StudioPanel } from './StudioPanel';
 import { ActivityLog } from './ActivityLog';
 import { UploadedImage, InputType } from '../types';
 import { Bubble } from '../App';
-import { fetchImageAsUploadedImage } from '../App';
+import { fetchImageAsUploadedImage } from '../utils';
 import { presetImages } from '../constants/presets';
 import { HairStyleMode } from './HairStyleMode';
 
@@ -116,6 +116,8 @@ interface LeftPanelProps {
     handleAnimateImage: () => void;
     logs: string[];
     setLogs: (logs: string[]) => void;
+    isRephrasingEdit: boolean;
+    handleRephraseEditPrompt: () => void;
 }
 
 export const LeftPanel: React.FC<LeftPanelProps> = (props) => {
@@ -319,6 +321,8 @@ export const LeftPanel: React.FC<LeftPanelProps> = (props) => {
                         setAnimationPrompt={props.setAnimationPrompt}
                         handleAnimateImage={props.handleAnimateImage}
                         loadingMessage={props.loadingMessage}
+                        isRephrasingEdit={props.isRephrasingEdit}
+                        handleRephraseEditPrompt={props.handleRephraseEditPrompt}
                     />
                 )}
             </div>

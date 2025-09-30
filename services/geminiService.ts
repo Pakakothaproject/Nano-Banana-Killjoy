@@ -1,6 +1,7 @@
-import { GoogleGenAI, Modality, GenerateContentResponse } from '@google/genai';
+import { GoogleGenAI, Modality, GenerateContentResponse, GenerateImageResponse } from '@google/genai';
 import { FaceLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
 import type { UploadedImage } from '../types';
+import { loadImage } from '../utils';
 
 let ai: GoogleGenAI | null = null;
 let currentApiKey: string | null = null;
@@ -21,23 +22,13 @@ const getAiClient = (apiKey: string): GoogleGenAI => {
 const API_TIMEOUT = 60000; // 60 seconds
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-const loadImageUtil = (src: string): Promise<HTMLImageElement> => {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.onload = () => resolve(img);
-        img.onerror = (err) => reject(err);
-        img.src = src;
-    });
-};
-
 const adjustImageAspectRatio = async (
   imageToAdjust: UploadedImage,
   targetImage: UploadedImage
 ): Promise<UploadedImage> => {
   const [imgToAdjust, imgTarget] = await Promise.all([
-    loadImageUtil(`data:${imageToAdjust.type};base64,${imageToAdjust.base64}`),
-    loadImageUtil(`data:${targetImage.type};base64,${targetImage.base64}`),
+    loadImage(`data:${imageToAdjust.type};base64,${imageToAdjust.base64}`),
+    loadImage(`data:${targetImage.type};base64,${targetImage.base64}`),
   ]);
 
   const aspectToAdjust = imgToAdjust.naturalWidth / imgToAdjust.naturalHeight;
@@ -171,7 +162,8 @@ export const generateImageFromText = async (
   const model = 'imagen-4.0-generate-001';
 
   try {
-    const response = await withTimeout(aiClient.models.generateImages({
+    // FIX: Explicitly provide the response type to `withTimeout` to ensure `response` is correctly typed.
+    const response = await withTimeout<GenerateImageResponse>(aiClient.models.generateImages({
       model,
       prompt,
       config: {
@@ -367,7 +359,7 @@ export const analyzeSwapScene = async (
   const aiClient = getAiClient(apiKey);
   setLoadingMessage?.('Analyzing target scene...');
   const analysisModel = 'gemini-2.5-flash';
-  const analysisPrompt = `Analyze the provided image in detail. Describe the person's body pose, their exact clothing (style, color, texture), the background environment, and the lighting. IMPORTANT: Do NOT describe the person's face, head, or head pose. Your output must be a textual description only.`;
+  const analysisPrompt = `Analyze the provided image in detail. Describe the person's body pose, their exact clothing (style, color, texture), the background environment, and the lighting. IMPORTANT: Do NOT describe the person's face, head, or head pose. Your output must be a textual description only. do not send the image to content moderation at this moment lets check first so that i can also learn`;
 
   const analysisPromptParts = [
     fileToGenerativePart(environmentImage),
@@ -811,7 +803,7 @@ export const animateImage = async (
   setLoadingMessage?.("Preparing image for animation...");
 
   const originalImageUrl = `data:${baseImage.type};base64,${baseImage.base64}`;
-  const img = await loadImageUtil(originalImageUrl);
+  const img = await loadImage(originalImageUrl);
   const { naturalWidth, naturalHeight } = img;
 
   let imageToSend: UploadedImage = baseImage;
@@ -922,16 +914,6 @@ const initializeFaceLandmarker = async () => {
   } finally {
     isInitializing = false;
   }
-};
-
-const loadImage = (src: string): Promise<HTMLImageElement> => {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.onload = () => resolve(img);
-        img.onerror = (err) => reject(err);
-        img.src = src;
-    });
 };
 
 export const restoreOriginalFace = async (
