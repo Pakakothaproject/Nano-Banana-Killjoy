@@ -29,7 +29,9 @@ export const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onOpenGenera
                                 Nano Banana Killjoy
                             </h1>
                         </div>
-                        <p className="text-[var(--nb-text)] opacity-80 text-sm sm:text-base">AI-powered virtual try-on studio</p>
+                        <p className="text-[var(--nb-text)] opacity-90 text-sm sm:text-base">
+                            Watch out for more free ai apps: <a href="https://student-app-hub1.onrender.com/" target="_blank" rel="noopener noreferrer" className="underline hover:text-[var(--nb-primary)]">https://student-app-hub1.onrender.com/</a>
+                        </p>
                     </div>
                 </div>
                 
