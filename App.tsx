@@ -306,6 +306,9 @@ const App: React.FC = () => {
     bubbleStartY: number;
   } | null>(null);
 
+
+  // API Key Management State
+  const [apiKey] = useState<string>(process.env.API_KEY || '');
   
   // App mode state
   const [appMode, setAppMode] = useState<'tryon' | 'sceneswap' | 'marketing' | 'hairstyle'>('tryon');
@@ -532,7 +535,7 @@ const App: React.FC = () => {
     clearGeneratedVideo();
     
     try {
-      const preparedImageUrls = await prepareModelImage(originalModelImage, numberOfImages);
+      const preparedImageUrls = await prepareModelImage(apiKey, originalModelImage, numberOfImages);
       setBaseGeneratedImages(preparedImageUrls); 
 
       // Assuming the first image determines the model image for subsequent steps
@@ -556,7 +559,7 @@ const App: React.FC = () => {
         setLoadingMessage(null);
       }
     }
-  }, [originalModelImage, isFaceRestoreEnabled, addLog, clearGeneratedVideo, numberOfImages]);
+  }, [apiKey, originalModelImage, isFaceRestoreEnabled, addLog, clearGeneratedVideo, numberOfImages]);
 
   const setErrorAndLog = useCallback((message: string) => {
     setError(message);
@@ -587,6 +590,7 @@ const App: React.FC = () => {
       }
 
       const results = await generateStyledImage(
+        apiKey,
         imageToGenerateFrom,
         isPoseLocked,
         activeTab === 'text' ? clothingText : undefined,
@@ -608,7 +612,7 @@ const App: React.FC = () => {
       addLog(errorMsg);
       setLoadingMessage(null);
     }
-  }, [modelImage, originalModelImage, isPoseLocked, addLog, setErrorAndLog, targetPersonPoint, clearGeneratedVideo, numberOfImages]);
+  }, [apiKey, modelImage, originalModelImage, isPoseLocked, addLog, setErrorAndLog, targetPersonPoint, clearGeneratedVideo, numberOfImages]);
   
   const handleImageClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!imageDisplayRef.current) return;
@@ -645,7 +649,7 @@ const App: React.FC = () => {
                 y: Math.round((selectedPoint.y / 100) * img.naturalHeight),
             };
         }
-      const newImageUrls = await editImage(currentImage, editPrompt, absolutePoint);
+      const newImageUrls = await editImage(apiKey, currentImage, editPrompt, absolutePoint);
       updateHistory(newImageUrls);
       addLog('Edit applied successfully.');
     } catch (err) {
@@ -657,7 +661,7 @@ const App: React.FC = () => {
         setIsSelectingPoint(false);
         setSelectedPoint(null);
     }
-  }, [baseGeneratedImages, activeImageIndex, editPrompt, selectedPoint, addLog, updateHistory]);
+  }, [apiKey, baseGeneratedImages, activeImageIndex, editPrompt, selectedPoint, addLog, updateHistory]);
   
   const handleStageProduct = useCallback(async () => {
     if (!baseGeneratedImages || baseGeneratedImages.length === 0 || !productPrompt || (productPrompt.includes('@object') && !productImage)) return;
@@ -668,7 +672,7 @@ const App: React.FC = () => {
     setError(null);
     try {
         const prompt = `Carefully edit the person in the first image to be using or holding the object from the second image, as described here: "${productPrompt.replace('@object', 'the object')}". IMPORTANT: Do not change the person's face, body shape, pose, or existing clothes. The background must also remain exactly the same. Only add the object.`;
-        let newImageUrls = await stageProduct(currentImage, productImage!, prompt);
+        let newImageUrls = await stageProduct(apiKey, currentImage, productImage!, prompt);
         updateHistory(newImageUrls);
         addLog('Product staged successfully.');
         setProductPrompt('');
@@ -679,7 +683,7 @@ const App: React.FC = () => {
         addLog(errorMsg);
         setLoadingMessage(null);
     }
-  }, [baseGeneratedImages, activeImageIndex, productPrompt, productImage, addLog, updateHistory]);
+  }, [apiKey, baseGeneratedImages, activeImageIndex, productPrompt, productImage, addLog, updateHistory]);
 
   const handleBackgroundChange = useCallback(async (newBgPrompt: string) => {
     if (!baseGeneratedImages || baseGeneratedImages.length === 0) return;
@@ -690,7 +694,7 @@ const App: React.FC = () => {
     setError(null);
     try {
       const prompt = `Change the background to ${newBgPrompt}. IMPORTANT: Do not change the person, their face, pose, body shape, or the existing clothes. Only change the background. Maintain the original lighting on the person.`;
-      let newImageUrls = await editImage(currentImage, prompt);
+      let newImageUrls = await editImage(apiKey, currentImage, prompt);
       updateHistory(newImageUrls);
       addLog('Background changed successfully.');
     } catch (err) {
@@ -699,7 +703,7 @@ const App: React.FC = () => {
       addLog(errorMsg);
       setLoadingMessage(null);
     }
-  }, [baseGeneratedImages, activeImageIndex, addLog, updateHistory]);
+  }, [apiKey, baseGeneratedImages, activeImageIndex, addLog, updateHistory]);
 
   const handleMakePortrait = useCallback(async () => {
     if (!baseGeneratedImages || baseGeneratedImages.length === 0) return;
@@ -710,7 +714,7 @@ const App: React.FC = () => {
     setError(null);
     try {
         const prompt = `Recompose this image into a full-body portrait shot. Extend the background vertically and adjust the framing. IMPORTANT: Do not change the person, their face, pose, body shape, or the existing clothes. Only change the composition.`;
-        let newImageUrls = await editImage(currentImage, prompt);
+        let newImageUrls = await editImage(apiKey, currentImage, prompt);
         updateHistory(newImageUrls);
         addLog('Composition adjusted successfully.');
     } catch (err) {
@@ -719,7 +723,7 @@ const App: React.FC = () => {
       addLog(errorMsg);
       setLoadingMessage(null);
     }
-  }, [baseGeneratedImages, activeImageIndex, addLog, updateHistory]);
+  }, [apiKey, baseGeneratedImages, activeImageIndex, addLog, updateHistory]);
 
   const handleAccessorize = useCallback(async () => {
     if (!baseGeneratedImages || baseGeneratedImages.length === 0 || !accessoryPrompt) return;
@@ -735,10 +739,10 @@ const App: React.FC = () => {
         let newImageUrls;
         if (useImage) {
             const prompt = `Add the accessory from the second image to the person in the first image, as described here: "${accessoryPrompt.replace('@accessory', 'the accessory')}". IMPORTANT: Do not change their face, pose, body shape, or the existing clothes. Only add the accessory described. Maintain the original background and lighting.`;
-            newImageUrls = await stageProduct(currentImage, accessoryImage!, prompt);
+            newImageUrls = await stageProduct(apiKey, currentImage, accessoryImage!, prompt);
         } else {
             const prompt = `Add ${accessoryPrompt} to the person in the image. IMPORTANT: Do not change their face, pose, body shape, or the existing clothes. Only add the accessory described. Maintain the original background and lighting.`;
-            newImageUrls = await editImage(currentImage, prompt);
+            newImageUrls = await editImage(apiKey, currentImage, prompt);
         }
         
         updateHistory(newImageUrls);
@@ -751,7 +755,7 @@ const App: React.FC = () => {
       addLog(errorMsg);
       setLoadingMessage(null);
     }
-  }, [baseGeneratedImages, activeImageIndex, accessoryPrompt, accessoryImage, addLog, updateHistory]);
+  }, [apiKey, baseGeneratedImages, activeImageIndex, accessoryPrompt, accessoryImage, addLog, updateHistory]);
   
   const handleAnimateImage = useCallback(async () => {
     if (!currentGeneratedImage || !animationPrompt) return;
@@ -769,7 +773,7 @@ const App: React.FC = () => {
     const imageToAnimate: UploadedImage = { base64, type };
 
     try {
-        const videoUrl = await animateImage(imageToAnimate, animationPrompt, (msg) => setLoadingMessage(msg));
+        const videoUrl = await animateImage(apiKey, imageToAnimate, animationPrompt, (msg) => setLoadingMessage(msg));
         setGeneratedVideo(videoUrl);
         addLog('Animation generated successfully.');
         setLoadingMessage(null);
@@ -778,7 +782,7 @@ const App: React.FC = () => {
         setErrorAndLog(errorMsg);
         setLoadingMessage(null);
     }
-  }, [currentGeneratedImage, animationPrompt, addLog, setErrorAndLog, clearGeneratedVideo]);
+  }, [apiKey, currentGeneratedImage, animationPrompt, addLog, setErrorAndLog, clearGeneratedVideo]);
 
     const handleApplyInpaint = useCallback(async () => {
         if (!currentGeneratedImage || !inpaintMask || !inpaintPrompt) {
@@ -812,7 +816,7 @@ const App: React.FC = () => {
             setLoadingMessage('Applying your inpaint...');
             addLog(`Inpainting with prompt: "${inpaintPrompt}"`);
             
-            const inpaintedCrops = await inpaintImage(croppedImage, croppedMask, inpaintPrompt);
+            const inpaintedCrops = await inpaintImage(apiKey, croppedImage, croppedMask, inpaintPrompt);
 
             setLoadingMessage('Pasting result...');
             addLog('Compositing the inpainted area back onto the original image...');
@@ -830,7 +834,7 @@ const App: React.FC = () => {
           setInpaintPrompt('');
           setClearMaskTrigger(c => c + 1);
         }
-    }, [currentGeneratedImage, inpaintMask, inpaintPrompt, addLog, setErrorAndLog, updateHistory]);
+    }, [currentGeneratedImage, inpaintMask, inpaintPrompt, apiKey, addLog, setErrorAndLog, updateHistory]);
 
 
   const handleUseAsModel = useCallback(() => {
@@ -1009,6 +1013,7 @@ const App: React.FC = () => {
         // Stage 1: Analyze the scene
         try {
             const description = await analyzeSwapScene(
+                apiKey,
                 environmentImage,
                 (message: string) => {
                     setLoadingMessage(message);
@@ -1029,6 +1034,7 @@ const App: React.FC = () => {
         // One-shot generation
         try {
             const results = await swapScene(
+                apiKey,
                 originalModelImage,
                 environmentImage,
                 isStrictFaceEnabled,
@@ -1046,7 +1052,7 @@ const App: React.FC = () => {
             setLoadingMessage(null);
         }
     }
-}, [originalModelImage, environmentImage, isStrictFaceEnabled, isTwoStageSwap, addLog, setErrorAndLog, clearGeneratedVideo, numberOfImages]);
+}, [apiKey, originalModelImage, environmentImage, isStrictFaceEnabled, isTwoStageSwap, addLog, setErrorAndLog, clearGeneratedVideo, numberOfImages]);
 
 const handleAutoSceneSwapGenerate = useCallback(async () => {
     if (!originalModelImage || !environmentImage) {
@@ -1061,6 +1067,7 @@ const handleAutoSceneSwapGenerate = useCallback(async () => {
 
     try {
         const results = await autoSwapScene(
+            apiKey,
             originalModelImage,
             environmentImage,
             isStrictFaceEnabled,
@@ -1077,7 +1084,7 @@ const handleAutoSceneSwapGenerate = useCallback(async () => {
         setErrorAndLog(errorMsg);
         setLoadingMessage(null);
     }
-}, [originalModelImage, environmentImage, isStrictFaceEnabled, addLog, setErrorAndLog, clearGeneratedVideo, numberOfImages]);
+}, [apiKey, originalModelImage, environmentImage, isStrictFaceEnabled, addLog, setErrorAndLog, clearGeneratedVideo, numberOfImages]);
 
 const handleParaphraseSceneDescription = useCallback(async () => {
     if (!sceneDescription) return;
@@ -1085,7 +1092,7 @@ const handleParaphraseSceneDescription = useCallback(async () => {
     setError(null);
     addLog('Rephrasing scene analysis...');
     try {
-        const paraphrased = await paraphraseDescription(sceneDescription);
+        const paraphrased = await paraphraseDescription(apiKey, sceneDescription);
         setSceneDescription(paraphrased);
         addLog('Rephrasing successful.');
     } catch (err) {
@@ -1094,7 +1101,7 @@ const handleParaphraseSceneDescription = useCallback(async () => {
     } finally {
         setIsParaphrasing(false);
     }
-}, [sceneDescription, addLog, setErrorAndLog]);
+}, [apiKey, sceneDescription, addLog, setErrorAndLog]);
 
 const handleCompleteSceneSwap = useCallback(async () => {
     if (!originalModelImage || !sceneDescription || !environmentImage) {
@@ -1108,6 +1115,7 @@ const handleCompleteSceneSwap = useCallback(async () => {
 
     try {
         const results = await generateFromSceneDescriptionSimple(
+            apiKey,
             originalModelImage,
             sceneDescription, // Use the (potentially edited) description from state
             isStrictFaceEnabled,
@@ -1128,7 +1136,7 @@ const handleCompleteSceneSwap = useCallback(async () => {
         setSwapStage('initial');
         setSceneDescription('');
     }
-}, [originalModelImage, sceneDescription, isStrictFaceEnabled, numberOfImages, addLog, setErrorAndLog, clearGeneratedVideo, environmentImage]);
+}, [apiKey, originalModelImage, sceneDescription, isStrictFaceEnabled, numberOfImages, addLog, setErrorAndLog, clearGeneratedVideo, environmentImage]);
   
   const handleMarketingGenerate = useCallback(async () => {
     if (!marketingPrompt || (marketingPrompt.includes('@product') && !marketingProductImage)) {
@@ -1142,6 +1150,7 @@ const handleCompleteSceneSwap = useCallback(async () => {
 
     try {
         const results = await generateMarketingImage(
+            apiKey,
             marketingPrompt,
             marketingProductImage,
             leaveSpaceForText,
@@ -1154,7 +1163,7 @@ const handleCompleteSceneSwap = useCallback(async () => {
         setErrorAndLog(errorMsg);
         setLoadingMessage(null);
     }
-  }, [marketingPrompt, marketingProductImage, leaveSpaceForText, addLog, setErrorAndLog, clearGeneratedVideo, numberOfImages]);
+  }, [apiKey, marketingPrompt, marketingProductImage, leaveSpaceForText, addLog, setErrorAndLog, clearGeneratedVideo, numberOfImages]);
 
   const handleHairStyleGenerate = useCallback(async () => {
     if (!originalModelImage || !hairStyleImage) {
@@ -1168,6 +1177,7 @@ const handleCompleteSceneSwap = useCallback(async () => {
 
     try {
         const results = await tryOnHairStyle(
+            apiKey,
             originalModelImage,
             hairStyleImage,
             numberOfImages,
@@ -1183,7 +1193,7 @@ const handleCompleteSceneSwap = useCallback(async () => {
         setErrorAndLog(errorMsg);
         setLoadingMessage(null);
     }
-  }, [originalModelImage, hairStyleImage, addLog, setErrorAndLog, clearGeneratedVideo, numberOfImages]);
+  }, [apiKey, originalModelImage, hairStyleImage, addLog, setErrorAndLog, clearGeneratedVideo, numberOfImages]);
 
 
   const handleAddBubble = () => {
@@ -1397,7 +1407,7 @@ const handleCompleteSceneSwap = useCallback(async () => {
       setGeneratorImages(null);
       
       try {
-          const results = await generateImageFromText(generatorPrompt, 1);
+          const results = await generateImageFromText(apiKey, generatorPrompt, 1);
           setGeneratorImages(results);
           addLog('Modal image generation successful.');
       } catch (err) {
@@ -1407,7 +1417,7 @@ const handleCompleteSceneSwap = useCallback(async () => {
       } finally {
           setIsGeneratingInModal(false);
       }
-  }, [generatorPrompt, addLog]);
+  }, [apiKey, generatorPrompt, addLog]);
 
   const handleDownloadGeneratedImage = useCallback((imageUrl: string) => {
     const link = document.createElement('a');
