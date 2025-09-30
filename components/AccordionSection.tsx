@@ -33,7 +33,7 @@ export const AccordionSection: React.FC<{
                 className="w-full flex justify-between items-center p-4"
                 aria-expanded={isOpen}
             >
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
                     <div className={`flex items-center justify-center w-8 h-8 rounded-full font-bold text-lg border-2 border-[var(--nb-border)] transition-colors
                         ${isOpen ? 'bg-[var(--nb-primary)] text-[var(--nb-border)] dark:text-[var(--nb-bg)]' : 'bg-[var(--nb-surface-alt)]'}
                         ${isComplete && !isOpen ? 'bg-[var(--nb-accent)]' : ''}`}
@@ -45,7 +45,7 @@ export const AccordionSection: React.FC<{
                 {isOpen ? <CollapseIcon className="w-6 h-6"/> : <ExpandIcon className="w-6 h-6"/>}
             </button>
             {isOpen && (
-                <div className="px-4 pb-6 pt-4 border-t-2 border-dashed border-[var(--nb-border)] animate-fade-in">
+                <div className="p-5 border-t-2 border-dashed border-[var(--nb-border)] animate-fade-in">
                     {children}
                 </div>
             )}

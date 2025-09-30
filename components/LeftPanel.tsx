@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { TabButton } from './TabButton';
-import { WandIcon, FrameIcon, MegaphoneIcon, BrushIcon, ScissorsIcon } from './Icons';
 import { TryOnMode } from './TryOnMode';
 import { SceneSwapMode } from './SceneSwapMode';
 import { MarketingMode } from './MarketingMode';
@@ -15,7 +14,6 @@ import { HairStyleMode } from './HairStyleMode';
 
 interface LeftPanelProps {
     appMode: 'tryon' | 'sceneswap' | 'marketing' | 'hairstyle';
-    setAppMode: (mode: 'tryon' | 'sceneswap' | 'marketing' | 'hairstyle') => void;
     generatedImage: string | null;
     loadingMessage: string | null;
     activeAccordion: 'model' | 'clothing' | 'style' | null;
@@ -133,6 +131,21 @@ export const LeftPanel: React.FC<LeftPanelProps> = (props) => {
     
     const [activeTab, setActiveTab] = React.useState<InputType>(InputType.IMAGE);
     const [selectedPresetUrl, setSelectedPresetUrl] = React.useState<string | null>(props.clothingImageUrl);
+    const [view, setView] = useState<'setup' | 'studio'>('setup');
+
+    useEffect(() => {
+        if (props.generatedImage) {
+            setView('studio');
+        }
+    }, [props.generatedImage]);
+
+    const handleModelImageUpload = useCallback((image: UploadedImage | null) => {
+        props.handleModelImageUpload(image);
+        if (image) {
+            setView('setup');
+        }
+    }, [props.handleModelImageUpload]);
+
 
     const loadClothingUrl = React.useCallback(async (url: string) => {
         if (!url) return;
@@ -181,24 +194,14 @@ export const LeftPanel: React.FC<LeftPanelProps> = (props) => {
 
     const selectedBubble = props.bubbles.find(b => b.id === props.selectedBubbleId);
 
-    return (
-        <div className="flex flex-col h-full">
-            <div className="flex-grow space-y-4 overflow-y-auto pr-2">
-                <div className="neo-card p-2">
-                    <div className="neo-tab-container !p-2">
-                        <TabButton label="Virtual Try-On" Icon={WandIcon} isActive={props.appMode === 'tryon'} onClick={() => props.setAppMode('tryon')} />
-                        <TabButton label="Scene Swap" Icon={FrameIcon} isActive={props.appMode === 'sceneswap'} onClick={() => props.setAppMode('sceneswap')} />
-                        <TabButton label="Hair Style" Icon={ScissorsIcon} isActive={props.appMode === 'hairstyle'} onClick={() => props.setAppMode('hairstyle')} />
-                        <TabButton label="Marketing" Icon={MegaphoneIcon} isActive={props.appMode === 'marketing'} onClick={() => props.setAppMode('marketing')} />
-                    </div>
-                </div>
-
-                {props.appMode === 'tryon' && (
-                    <TryOnMode
+    const renderSetupContent = () => {
+        switch(props.appMode) {
+            case 'tryon':
+                return <TryOnMode
                         activeAccordion={props.activeAccordion}
                         setActiveAccordion={props.setActiveAccordion}
                         originalModelImage={props.originalModelImage}
-                        handleModelImageUpload={props.handleModelImageUpload}
+                        handleModelImageUpload={handleModelImageUpload}
                         modelImage={props.modelImage}
                         modelImageUrl={props.modelImageUrl}
                         setModelImageUrl={props.setModelImageUrl}
@@ -234,13 +237,11 @@ export const LeftPanel: React.FC<LeftPanelProps> = (props) => {
                         handlePrepareModel={props.handlePrepareModel}
                         numberOfImages={props.numberOfImages}
                         setNumberOfImages={props.setNumberOfImages}
-                    />
-                )}
-                
-                {props.appMode === 'sceneswap' && (
-                    <SceneSwapMode
+                    />;
+            case 'sceneswap':
+                 return <SceneSwapMode
                         originalModelImage={props.originalModelImage}
-                        handleModelImageUpload={props.handleModelImageUpload}
+                        handleModelImageUpload={handleModelImageUpload}
                         modelImageUrl={props.modelImageUrl}
                         setModelImageUrl={props.setModelImageUrl}
                         isModelUrlLoading={props.isModelUrlLoading}
@@ -269,24 +270,20 @@ export const LeftPanel: React.FC<LeftPanelProps> = (props) => {
                         handleCompleteSceneSwap={props.handleCompleteSceneSwap}
                         addLog={props.addLog}
                         setError={props.setError}
-                    />
-                )}
-
-                {props.appMode === 'hairstyle' && (
-                    <HairStyleMode
+                    />;
+            case 'hairstyle':
+                return <HairStyleMode
                         modelImage={props.originalModelImage}
-                        handleModelImageUpload={props.handleModelImageUpload}
+                        handleModelImageUpload={handleModelImageUpload}
                         hairStyleImage={props.hairStyleImage}
                         setHairStyleImage={props.setHairStyleImage}
                         handleHairStyleGenerate={props.handleHairStyleGenerate}
                         loadingMessage={props.loadingMessage}
                         numberOfImages={props.numberOfImages}
                         setNumberOfImages={props.setNumberOfImages}
-                    />
-                )}
-                
-                {props.appMode === 'marketing' && (
-                    <MarketingMode
+                    />;
+            case 'marketing':
+                return <MarketingMode
                         marketingPrompt={props.marketingPrompt}
                         setMarketingPrompt={props.setMarketingPrompt}
                         marketingProductImage={props.marketingProductImage}
@@ -297,62 +294,78 @@ export const LeftPanel: React.FC<LeftPanelProps> = (props) => {
                         loadingMessage={props.loadingMessage}
                         numberOfImages={props.numberOfImages}
                         setNumberOfImages={props.setNumberOfImages}
-                    />
-                )}
-                
+                    />;
+            default:
+                return null;
+        }
+    };
+
+    return (
+        <div className="flex flex-col h-full gap-4">
+            <div className="flex-grow flex flex-col min-h-0">
                 {props.generatedImage && !props.loadingMessage && (
-                    <StudioPanel
-                        activeStudioTab={props.activeStudioTab}
-                        setActiveStudioTab={props.setActiveStudioTab}
-                        editTab={props.editTab}
-                        setEditTab={props.setEditTab}
-                        isSelectingPoint={props.isSelectingPoint}
-                        setIsSelectingPoint={props.setIsSelectingPoint}
-                        selectedPoint={props.selectedPoint}
-                        setSelectedPoint={props.setSelectedPoint}
-                        editPrompt={props.editPrompt}
-                        setEditPrompt={props.setEditPrompt}
-                        handleEditImage={props.handleEditImage}
-                        setIsInpainting={props.setIsInpainting}
-                        accessoryPrompt={props.accessoryPrompt}
-                        setAccessoryPrompt={props.setAccessoryPrompt}
-                        accessoryImage={props.accessoryImage}
-                        setAccessoryImage={props.setAccessoryImage}
-                        handleAccessorize={props.handleAccessorize}
-                        productPrompt={props.productPrompt}
-                        setProductPrompt={props.setProductPrompt}
-                        productImage={props.productImage}
-                        setProductImage={props.setProductImage}
-                        handleStageProduct={props.handleStageProduct}
-                        brightness={props.brightness}
-                        setBrightness={props.setBrightness}
-                        contrast={props.contrast}
-                        setContrast={props.setContrast}
-                        grainIntensity={props.grainIntensity}
-                        setGrainIntensity={props.setGrainIntensity}
-                        handleMakePortrait={props.handleMakePortrait}
-                        handleBackgroundChange={props.handleBackgroundChange}
-                        isWatermarkEnabled={props.isWatermarkEnabled}
-                        setIsWatermarkEnabled={props.setIsWatermarkEnabled}
-                        bubbles={props.bubbles}
-                        handleAddBubble={props.handleAddBubble}
-                        handleApplyBubbles={props.handleApplyBubbles}
-                        selectedBubbleId={props.selectedBubbleId}
-                        setSelectedBubbleId={props.setSelectedBubbleId}
-                        handleDeleteBubble={props.handleDeleteBubble}
-                        selectedBubble={selectedBubble}
-                        handleUpdateBubble={props.handleUpdateBubble}
-                        animationPrompt={props.animationPrompt}
-                        setAnimationPrompt={props.setAnimationPrompt}
-                        handleAnimateImage={props.handleAnimateImage}
-                        loadingMessage={props.loadingMessage}
-                        isRephrasingEdit={props.isRephrasingEdit}
-                        handleRephraseEditPrompt={props.handleRephraseEditPrompt}
-                    />
+                    <div className="flex-shrink-0 mb-4">
+                        <div className="neo-tab-container !p-1.5">
+                            <TabButton label="Setup" isActive={view === 'setup'} onClick={() => setView('setup')} />
+                            <TabButton label="Studio" isActive={view === 'studio'} onClick={() => setView('studio')} />
+                        </div>
+                    </div>
                 )}
+                 <div className="flex-grow min-h-0">
+                    {view === 'setup' ? renderSetupContent() : (
+                         <StudioPanel
+                            activeStudioTab={props.activeStudioTab}
+                            setActiveStudioTab={props.setActiveStudioTab}
+                            editTab={props.editTab}
+                            setEditTab={props.setEditTab}
+                            isSelectingPoint={props.isSelectingPoint}
+                            setIsSelectingPoint={props.setIsSelectingPoint}
+                            selectedPoint={props.selectedPoint}
+                            setSelectedPoint={props.setSelectedPoint}
+                            editPrompt={props.editPrompt}
+                            setEditPrompt={props.setEditPrompt}
+                            handleEditImage={props.handleEditImage}
+                            setIsInpainting={props.setIsInpainting}
+                            accessoryPrompt={props.accessoryPrompt}
+                            setAccessoryPrompt={props.setAccessoryPrompt}
+                            accessoryImage={props.accessoryImage}
+                            setAccessoryImage={props.setAccessoryImage}
+                            handleAccessorize={props.handleAccessorize}
+                            productPrompt={props.productPrompt}
+                            setProductPrompt={props.setProductPrompt}
+                            productImage={props.productImage}
+                            setProductImage={props.setProductImage}
+                            handleStageProduct={props.handleStageProduct}
+                            brightness={props.brightness}
+                            setBrightness={props.setBrightness}
+                            contrast={props.contrast}
+                            setContrast={props.setContrast}
+                            grainIntensity={props.grainIntensity}
+                            setGrainIntensity={props.setGrainIntensity}
+                            handleMakePortrait={props.handleMakePortrait}
+                            handleBackgroundChange={props.handleBackgroundChange}
+                            isWatermarkEnabled={props.isWatermarkEnabled}
+                            setIsWatermarkEnabled={props.setIsWatermarkEnabled}
+                            bubbles={props.bubbles}
+                            handleAddBubble={props.handleAddBubble}
+                            handleApplyBubbles={props.handleApplyBubbles}
+                            selectedBubbleId={props.selectedBubbleId}
+                            setSelectedBubbleId={props.setSelectedBubbleId}
+                            handleDeleteBubble={props.handleDeleteBubble}
+                            selectedBubble={selectedBubble}
+                            handleUpdateBubble={props.handleUpdateBubble}
+                            animationPrompt={props.animationPrompt}
+                            setAnimationPrompt={props.setAnimationPrompt}
+                            handleAnimateImage={props.handleAnimateImage}
+                            loadingMessage={props.loadingMessage}
+                            isRephrasingEdit={props.isRephrasingEdit}
+                            handleRephraseEditPrompt={props.handleRephraseEditPrompt}
+                        />
+                    )}
+                 </div>
             </div>
             
-            <div className="flex-shrink-0 pt-4">
+            <div className="flex-shrink-0">
                 <ActivityLog logs={props.logs} onClearLogs={() => props.setLogs([])} />
             </div>
         </div>

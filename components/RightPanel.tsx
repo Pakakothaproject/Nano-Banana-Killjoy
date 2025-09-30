@@ -105,7 +105,7 @@ export const RightPanel: React.FC<RightPanelProps> = ({
     };
 
     return (
-        <div className="flex flex-col h-full gap-4">
+        <div className="flex flex-col gap-4">
             <div className="flex-shrink-0">
                 <div className="neo-card p-4">
                      <fieldset disabled={(!currentGeneratedImage && !generatedVideo) || !!loadingMessage} className="space-y-3">
@@ -122,10 +122,10 @@ export const RightPanel: React.FC<RightPanelProps> = ({
                      </fieldset>
                 </div>
             </div>
-            <div className="flex-grow flex items-center justify-center min-h-0">
+            <div className="flex-grow flex items-center justify-center">
                 <div 
                     ref={imageDisplayRef}
-                    className="w-full h-full flex justify-center items-center rounded-xl relative overflow-hidden bg-[var(--nb-surface-alt)] transition-all neo-card"
+                    className="w-full max-h-full flex justify-center items-center rounded-xl relative overflow-hidden bg-[var(--nb-surface-alt)] transition-all neo-card"
                     style={{ aspectRatio: imageAspectRatio }}
                     onClick={handleImageClick}
                     onTouchStart={handleTouchStart}

@@ -126,6 +126,9 @@ export const TryOnMode: React.FC<TryOnModeProps> = ({
 
             <AccordionSection Icon={TShirtIcon} title="2. Clothing" sectionId="clothing" activeSection={activeAccordion} setActiveSection={setActiveAccordion} isEnabled={!!originalModelImage} isComplete={!!clothingImage || (activeTab === InputType.TEXT && !!clothingText)}>
                 <div className="space-y-4">
+                    <p className="text-xs opacity-70 italic text-center px-2 py-1">
+                        Use only when reference and model images are similar. Otherwise, use Scene Swap to try on clothes.
+                    </p>
                     <div className="neo-tab-container">
                         <TabButton label="Describe" isActive={activeTab === InputType.TEXT} onClick={() => setActiveTab(InputType.TEXT)} />
                         <TabButton label="Upload" isActive={activeTab === InputType.IMAGE} onClick={() => setActiveTab(InputType.IMAGE)} />

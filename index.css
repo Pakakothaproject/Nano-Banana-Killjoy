@@ -33,6 +33,10 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+#root {
+  height: 100%;
+}
+
 /* General Neo Styles */
 .neo-card {
   background-color: var(--nb-surface);

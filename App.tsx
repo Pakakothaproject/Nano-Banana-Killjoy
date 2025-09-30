@@ -18,6 +18,7 @@ import { PromotionPopup } from './components/PromotionPopup';
 import { loadImage, getMaskBoundingBox, addPaddingToBox, cropImage, pasteImage } from './utils/image';
 import { uploadToCloudinary } from './utils/cloudinary';
 import type { BoundingBox } from './utils/image';
+import { ModeSelector } from './components/ModeSelector';
 
 const WATERMARK_URL = 'https://vectorseek.com/wp-content/uploads/2023/08/Blacked-Logo-Vector.svg-.png';
 const BUBBLE_IMAGE_URL = 'https://static.vecteezy.com/system/resources/thumbnails/045/925/602/small/black-and-white-color-speech-bubble-balloon-icon-sticker-memo-keyword-planner-text-box-banner-png.png';
@@ -1278,17 +1279,18 @@ const handleCompleteSceneSwap = useCallback(async () => {
   }
 
   return (
-    <div className="min-h-screen font-sans flex flex-col items-center p-4 sm:p-6">
+    <div className="min-h-screen font-sans flex flex-col p-4 gap-4">
       <Header 
         theme={theme} 
         toggleTheme={toggleTheme} 
         onOpenGenerator={handleOpenGenerator}
       />
       
-      <main className="w-full grid grid-cols-1 lg:grid-cols-[450px_1fr] gap-6 lg:h-[calc(100vh-140px)]">
+      <main className="w-full grid grid-cols-[80px_500px_1fr] gap-4 flex-grow">
+        <ModeSelector appMode={appMode} setAppMode={setAppMode} />
+        
         <LeftPanel
             appMode={appMode}
-            setAppMode={setAppMode}
             generatedImage={currentGeneratedImage}
             loadingMessage={loadingMessage}
             activeAccordion={activeAccordion}

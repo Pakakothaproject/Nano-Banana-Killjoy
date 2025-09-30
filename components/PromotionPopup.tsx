@@ -16,10 +16,13 @@ export const PromotionPopup: React.FC<PromotionPopupProps> = ({ isOpen, onClose 
             <div className="image-modal-content">
                 <div className="neo-card p-6 w-full max-w-lg space-y-6 m-4 text-center relative">
                     <div className="pt-8">
-                        <h2 id="promo-popup-title" className="text-2xl font-bold">
-                            See all Apps:
+                        <h2 id="promo-popup-title" className="text-xl font-bold">
+                             Support us by trying our other apps In App Hub. New apps coming everyday.
                         </h2>
-                        <p className="text-lg mt-2">
+                        <p className="text-base mt-2">
+                           Also if possible comment back your feedback or appreciations on the reddit post.
+                        </p>
+                        <p className="text-lg mt-4">
                             <a href="https://student-app-hub1.onrender.com/" target="_blank" rel="noopener noreferrer" className="underline hover:text-[var(--nb-primary)] break-all">
                                 https://student-app-hub1.onrender.com/
                             </a>

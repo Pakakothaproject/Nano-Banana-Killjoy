@@ -9,7 +9,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onOpenGenerator }) => {
     return (
-        <header className="w-full mb-6">
+        <header className="w-full mb-6 flex-shrink-0">
             <div className="flex justify-between items-center">
                 <div className="flex-1 flex justify-start items-center gap-2">
                     <button onClick={onOpenGenerator} className="neo-button neo-button-accent hidden sm:inline-flex">
@@ -25,11 +25,11 @@ export const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onOpenGenera
                     <div className="flex flex-col items-center">
                         <div className="inline-flex items-center gap-3 justify-center mb-1">
                             <PaletteIcon />
-                            <h1 className="text-3xl sm:text-4xl font-extrabold text-[var(--nb-text)] text-center">
+                            <h1 className="text-3xl font-extrabold text-[var(--nb-text)] text-center">
                                 Nano Banana Killjoy
                             </h1>
                         </div>
-                        <p className="text-[var(--nb-text)] opacity-90 text-sm sm:text-base">
+                        <p className="text-[var(--nb-text)] opacity-90 text-base">
                             Watch out for more free ai apps: <a href="https://student-app-hub1.onrender.com/" target="_blank" rel="noopener noreferrer" className="underline hover:text-[var(--nb-primary)]">https://student-app-hub1.onrender.com/</a>
                         </p>
                     </div>

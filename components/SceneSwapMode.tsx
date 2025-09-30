@@ -136,10 +136,10 @@ export const SceneSwapMode: React.FC<SceneSwapModeProps> = ({
     if (swapStage === 'analyzed') {
         return (
             <div className="space-y-4 animate-fade-in">
-                <div className="neo-card p-6 space-y-4">
+                <div className="neo-card p-5 space-y-4">
                     <div className="flex items-center gap-4 justify-between">
                         <div className="flex items-center gap-4">
-                            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[var(--nb-primary)] text-[var(--nb-border)] dark:text-[var(--nb-bg)] font-bold text-lg border-2 border-[var(--nb-border)]">3</div>
+                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[var(--nb-primary)] text-[var(--nb-border)] dark:text-[var(--nb-bg)] font-bold text-lg border-2 border-[var(--nb-border)]">3</div>
                             <h2 className="text-2xl font-bold">Review & Edit</h2>
                         </div>
                         <button onClick={handleParaphraseSceneDescription} disabled={isParaphrasing || !!loadingMessage} className="neo-button neo-button-secondary text-sm">
@@ -164,31 +164,31 @@ export const SceneSwapMode: React.FC<SceneSwapModeProps> = ({
 
     return (
         <div className="space-y-4 animate-fade-in">
-            <div className="neo-card p-6 space-y-4">
+            <div className="neo-card p-5 space-y-3">
                  <div className="flex items-center gap-4">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[var(--nb-primary)] text-[var(--nb-border)] dark:text-[var(--nb-bg)] font-bold text-lg border-2 border-[var(--nb-border)]">1</div>
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[var(--nb-primary)] text-[var(--nb-border)] dark:text-[var(--nb-bg)] font-bold text-lg border-2 border-[var(--nb-border)]">1</div>
                     <h2 className="text-2xl font-bold">Your Model</h2>
                 </div>
                 <p className="text-sm opacity-80 -mt-2">Upload an image of the person whose face/identity you want to use.</p>
                 <ImageUploader image={originalModelImage} onImageUpload={handleModelImageUpload} isLoading={isModelUrlLoading} />
-                <div className="flex items-center gap-2 mt-3">
+                <div className="flex items-center gap-2">
                     <hr className="flex-grow border-t border-[var(--nb-border)] opacity-30" />
                     <span className="text-xs font-semibold opacity-70">OR</span>
                     <hr className="flex-grow border-t border-[var(--nb-border)] opacity-30" />
                 </div>
-                <div className="flex gap-2 mt-3">
+                <div className="flex gap-2">
                     <input type="text" value={modelImageUrl} onChange={e => setModelImageUrl(e.target.value)} className="neo-input w-full" placeholder="Enter model image URL" />
                     <button onClick={handleLoadModelUrl} disabled={isModelUrlLoading} className="neo-button neo-button-secondary"><LinkIcon /></button>
                 </div>
             </div>
-            <div className="neo-card p-6 space-y-4">
+            <div className="neo-card p-5 space-y-3">
                  <div className="flex items-center gap-4">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[var(--nb-primary)] text-[var(--nb-border)] dark:text-[var(--nb-bg)] font-bold text-lg border-2 border-[var(--nb-border)]">2</div>
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[var(--nb-primary)] text-[var(--nb-border)] dark:text-[var(--nb-bg)] font-bold text-lg border-2 border-[var(--nb-border)]">2</div>
                     <h2 className="text-2xl font-bold">Target Scene & Options</h2>
                 </div>
                  <p className="text-sm opacity-80 -mt-2">Upload an image with the target pose, clothes, and background.</p>
                 <ImageUploader image={environmentImage} onImageUpload={setEnvironmentImage} isLoading={isEnvironmentUrlLoading} />
-                 <div className="flex items-center gap-2 mt-3">
+                 <div className="flex items-center gap-2">
                     <hr className="flex-grow border-t border-[var(--nb-border)] opacity-30" />
                     <span className="text-xs font-semibold opacity-70">OR</span>
                     <hr className="flex-grow border-t border-[var(--nb-border)] opacity-30" />
@@ -207,7 +207,7 @@ export const SceneSwapMode: React.FC<SceneSwapModeProps> = ({
                         ))}
                     </div>
                 )}
-                <div className="flex gap-2 mt-3">
+                <div className="flex gap-2">
                     <input type="text" value={environmentImageUrl} onChange={e => setEnvironmentImageUrl(e.target.value)} className="neo-input w-full" placeholder="Enter scene image URL" />
                     <button onClick={handleLoadEnvironmentUrl} disabled={isEnvironmentUrlLoading} className="neo-button neo-button-secondary"><LinkIcon /></button>
                 </div>
