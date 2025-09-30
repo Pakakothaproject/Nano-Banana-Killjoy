@@ -8,7 +8,8 @@ import { StudioPanel } from './StudioPanel';
 import { ActivityLog } from './ActivityLog';
 import { UploadedImage, InputType } from '../types';
 import { Bubble } from '../App';
-import { fetchImageAsUploadedImage } from '../utils';
+// FIX: Update import path for fetchImageAsUploadedImage from the refactored utils module.
+import { fetchImageAsUploadedImage } from '../utils/image';
 import { presetImages } from '../constants/presets';
 import { HairStyleMode } from './HairStyleMode';
 
@@ -28,6 +29,10 @@ interface LeftPanelProps {
     targetPersonPoint: { x: number; y: number } | null;
     setTargetPersonPoint: (point: { x: number; y: number } | null) => void;
     modelImage: UploadedImage | null;
+    modelImageUrl: string;
+    setModelImageUrl: (url: string) => void;
+    isModelUrlLoading: boolean;
+    setIsModelUrlLoading: (loading: boolean) => void;
     clothingImage: UploadedImage | null;
     setClothingImage: (image: UploadedImage | null) => void;
     clothingText: string;
@@ -47,6 +52,10 @@ interface LeftPanelProps {
     handlePrepareModel: () => void;
     environmentImage: UploadedImage | null;
     setEnvironmentImage: (image: UploadedImage | null) => void;
+    environmentImageUrl: string;
+    setEnvironmentImageUrl: (url: string) => void;
+    isEnvironmentUrlLoading: boolean;
+    setIsEnvironmentUrlLoading: (loading: boolean) => void;
     isStrictFaceEnabled: boolean;
     setIsStrictFaceEnabled: (enabled: boolean) => void;
     handleSceneSwapGenerate: () => void;
@@ -191,6 +200,12 @@ export const LeftPanel: React.FC<LeftPanelProps> = (props) => {
                         originalModelImage={props.originalModelImage}
                         handleModelImageUpload={props.handleModelImageUpload}
                         modelImage={props.modelImage}
+                        modelImageUrl={props.modelImageUrl}
+                        setModelImageUrl={props.setModelImageUrl}
+                        isModelUrlLoading={props.isModelUrlLoading}
+                        setIsModelUrlLoading={props.setIsModelUrlLoading}
+                        addLog={props.addLog}
+                        setError={props.setError}
                         isFaceRestoreEnabled={props.isFaceRestoreEnabled}
                         setIsFaceRestoreEnabled={props.setIsFaceRestoreEnabled}
                         isSelectingPerson={props.isSelectingPerson}
@@ -226,8 +241,16 @@ export const LeftPanel: React.FC<LeftPanelProps> = (props) => {
                     <SceneSwapMode
                         originalModelImage={props.originalModelImage}
                         handleModelImageUpload={props.handleModelImageUpload}
+                        modelImageUrl={props.modelImageUrl}
+                        setModelImageUrl={props.setModelImageUrl}
+                        isModelUrlLoading={props.isModelUrlLoading}
+                        setIsModelUrlLoading={props.setIsModelUrlLoading}
                         environmentImage={props.environmentImage}
                         setEnvironmentImage={props.setEnvironmentImage}
+                        environmentImageUrl={props.environmentImageUrl}
+                        setEnvironmentImageUrl={props.setEnvironmentImageUrl}
+                        isEnvironmentUrlLoading={props.isEnvironmentUrlLoading}
+                        setIsEnvironmentUrlLoading={props.setIsEnvironmentUrlLoading}
                         isStrictFaceEnabled={props.isStrictFaceEnabled}
                         setIsStrictFaceEnabled={props.setIsStrictFaceEnabled}
                         handleSceneSwapGenerate={props.handleSceneSwapGenerate}
@@ -244,6 +267,8 @@ export const LeftPanel: React.FC<LeftPanelProps> = (props) => {
                         swapStage={props.swapStage}
                         setSwapStage={props.setSwapStage}
                         handleCompleteSceneSwap={props.handleCompleteSceneSwap}
+                        addLog={props.addLog}
+                        setError={props.setError}
                     />
                 )}
 

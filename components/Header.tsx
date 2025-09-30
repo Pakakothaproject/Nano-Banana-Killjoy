@@ -26,7 +26,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onOpenGenera
                         <div className="inline-flex items-center gap-3 justify-center mb-1">
                             <PaletteIcon />
                             <h1 className="text-3xl sm:text-4xl font-extrabold text-[var(--nb-text)] text-center">
-                                Virtual Dressing Room
+                                Nano Banana Killjoy
                             </h1>
                         </div>
                         <p className="text-[var(--nb-text)] opacity-80 text-sm sm:text-base">AI-powered virtual try-on studio</p>

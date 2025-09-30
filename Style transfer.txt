@@ -1,1 +1,0 @@
-# This file's content has been integrated into services/geminiService.ts and is now redundant. It can be safely deleted.

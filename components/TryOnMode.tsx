@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import type { UploadedImage } from '../types';
 import { InputType } from '../types';
 import { AccordionSection } from './AccordionSection';
@@ -7,6 +7,8 @@ import { TabButton } from './TabButton';
 import { presetTextPrompts, presetImages } from '../constants/presets';
 import { UserIcon, TShirtIcon, SparklesIcon, UsersIcon, CrosshairIcon, XIcon, LinkIcon, LockIcon, UnlockIcon, WandIcon } from './Icons';
 import { GenerationCountSelector } from './GenerationCountSelector';
+// FIX: Update import path for fetchImageAsUploadedImage from the refactored utils module.
+import { fetchImageAsUploadedImage } from '../utils/image';
 
 interface TryOnModeProps {
     activeAccordion: 'model' | 'clothing' | 'style' | null;
@@ -14,6 +16,12 @@ interface TryOnModeProps {
     originalModelImage: UploadedImage | null;
     handleModelImageUpload: (image: UploadedImage | null) => void;
     modelImage: UploadedImage | null;
+    modelImageUrl: string;
+    setModelImageUrl: (url: string) => void;
+    isModelUrlLoading: boolean;
+    setIsModelUrlLoading: (loading: boolean) => void;
+    addLog: (message: string) => void;
+    setError: (error: string | null) => void;
     isFaceRestoreEnabled: boolean;
     setIsFaceRestoreEnabled: (enabled: boolean) => void;
     isSelectingPerson: boolean;
@@ -45,20 +53,47 @@ interface TryOnModeProps {
 }
 
 export const TryOnMode: React.FC<TryOnModeProps> = ({
-    activeAccordion, setActiveAccordion, originalModelImage, handleModelImageUpload, modelImage, isFaceRestoreEnabled,
-    setIsFaceRestoreEnabled, isSelectingPerson, setIsSelectingPerson, targetPersonPoint, setTargetPersonPoint, clothingImage,
-    clothingText, setClothingText, activeTab, setActiveTab, clothingImageUrl, setClothingImageUrl, isUrlLoading,
-    handleLoadFromUrlInput, handlePresetImageSelect, handleClothingImageUpload, showPresets, setShowPresets, selectedPresetUrl,
-    isPoseLocked, setIsPoseLocked, handleGenerate, loadingMessage, isPreparingModel, handlePrepareModel,
-    numberOfImages, setNumberOfImages,
+    activeAccordion, setActiveAccordion, originalModelImage, handleModelImageUpload, modelImage, modelImageUrl, setModelImageUrl,
+    isModelUrlLoading, setIsModelUrlLoading, addLog, setError, isFaceRestoreEnabled, setIsFaceRestoreEnabled, isSelectingPerson,
+    setIsSelectingPerson, targetPersonPoint, setTargetPersonPoint, clothingImage, clothingText, setClothingText, activeTab,
+    setActiveTab, clothingImageUrl, setClothingImageUrl, isUrlLoading, handleLoadFromUrlInput, handlePresetImageSelect,
+    handleClothingImageUpload, showPresets, setShowPresets, selectedPresetUrl, isPoseLocked, setIsPoseLocked,
+    handleGenerate, loadingMessage, isPreparingModel, handlePrepareModel, numberOfImages, setNumberOfImages,
 }) => {
     const clothingInputMissing = (activeTab === InputType.TEXT && !clothingText) || (activeTab === InputType.IMAGE && !clothingImage);
     const isGenerateButtonDisabled = !!loadingMessage || !originalModelImage || clothingInputMissing || isPreparingModel;
 
+    const handleLoadModelUrl = useCallback(async () => {
+        if (!modelImageUrl) return;
+        setIsModelUrlLoading(true);
+        setError(null);
+        addLog(`Loading model from URL: ${modelImageUrl}`);
+        try {
+            const image = await fetchImageAsUploadedImage(modelImageUrl);
+            handleModelImageUpload(image);
+            addLog('Model loaded successfully from URL.');
+        } catch (err) {
+            const errorMsg = `Failed to load model from URL. Error: ${err instanceof Error ? err.message : 'Unknown error'}`;
+            setError(errorMsg);
+            addLog(errorMsg);
+        } finally {
+            setIsModelUrlLoading(false);
+        }
+    }, [modelImageUrl, setIsModelUrlLoading, setError, addLog, handleModelImageUpload]);
+
     return (
         <div className="space-y-4 animate-fade-in">
             <AccordionSection Icon={UserIcon} title="1. Model" sectionId="model" activeSection={activeAccordion} setActiveSection={setActiveAccordion} isComplete={!!originalModelImage}>
-                <ImageUploader image={originalModelImage} onImageUpload={handleModelImageUpload} />
+                <ImageUploader image={originalModelImage} onImageUpload={handleModelImageUpload} isLoading={isModelUrlLoading} />
+                <div className="flex items-center gap-2 mt-3">
+                    <hr className="flex-grow border-t border-[var(--nb-border)] opacity-30" />
+                    <span className="text-xs font-semibold opacity-70">OR</span>
+                    <hr className="flex-grow border-t border-[var(--nb-border)] opacity-30" />
+                </div>
+                <div className="flex gap-2 mt-3">
+                    <input type="text" value={modelImageUrl} onChange={e => setModelImageUrl(e.target.value)} className="neo-input w-full" placeholder="Enter model image URL" />
+                    <button onClick={handleLoadModelUrl} disabled={isModelUrlLoading} className="neo-button neo-button-secondary"><LinkIcon /></button>
+                </div>
                 {originalModelImage && (
                     <div className="space-y-4 pt-4">
                         <div className="space-y-4 pt-4 border-t-2 border-[var(--nb-border)] border-dashed">
@@ -165,7 +200,7 @@ export const TryOnMode: React.FC<TryOnModeProps> = ({
                     {originalModelImage && (
                         <div className="space-y-2 pt-4 border-t-2 border-dashed border-[var(--nb-border)]">
                             <p className="text-sm opacity-80 text-center">For best results, prepare your model to remove existing clothing first.</p>
-                            <button onClick={handlePrepareModel} disabled={isPreparingModel} className="w-full neo-button neo-button-accent">
+                            <button onClick={handlePrepareModel} disabled={isPreparingModel} className="neo-button neo-button-accent">
                                 <SparklesIcon /> {isPreparingModel ? 'Preparing...' : 'Prepare Model (Optional)'}
                             </button>
                         </div>
