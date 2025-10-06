@@ -17,7 +17,6 @@ import { RightPanel } from './components/RightPanel';
 import { ExpandedImageModal } from './components/ExpandedImageModal';
 import { InpaintingModal } from './components/InpaintingModal';
 import { GeneratorModal } from './components/GeneratorModal';
-import { PromotionPopup } from './components/PromotionPopup';
 import { SettingsModal } from './components/SettingsModal';
 import { loadImage, getMaskBoundingBox, addPaddingToBox, cropImage, pasteImage } from './utils/image';
 import { uploadToCloudinary } from './utils/cloudinary';
@@ -136,9 +135,6 @@ const App: React.FC = () => {
   const [environmentImageUrl, setEnvironmentImageUrl] = useState<string>('');
   const [isEnvironmentUrlLoading, setIsEnvironmentUrlLoading] = useState<boolean>(false);
 
-  // Promotion popup state
-  const [isPromoPopupOpen, setIsPromoPopupOpen] = useState(false);
-
   // UI State for new layout
   const [isPanelOpen, setIsPanelOpen] = useState(true);
 
@@ -158,14 +154,6 @@ const App: React.FC = () => {
         // Open the modal anyway to allow the user to input a key for the current session.
         setIsSettingsOpen(true);
     }
-  }, []);
-
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-        setIsPromoPopupOpen(true);
-    }, 300000); // 5 minutes
-
-    return () => clearInterval(intervalId); // Cleanup on unmount
   }, []);
 
   useEffect(() => {
@@ -231,14 +219,13 @@ const App: React.FC = () => {
         if(isSelectingPoint) setIsSelectingPoint(false);
         if(isSelectingPerson) setIsSelectingPerson(false);
         if(isInpainting) setIsInpainting(false);
-        if(isPromoPopupOpen) setIsPromoPopupOpen(false);
         if(isSettingsOpen) setIsSettingsOpen(false);
         if(isPanelOpen) setIsPanelOpen(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isExpanded, isGeneratorOpen, isSelectingPoint, isSelectingPerson, isInpainting, isPromoPopupOpen, isSettingsOpen, isPanelOpen]);
+  }, [isExpanded, isGeneratorOpen, isSelectingPoint, isSelectingPerson, isInpainting, isSettingsOpen, isPanelOpen]);
 
   const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
 
@@ -1468,11 +1455,6 @@ const handleCompleteSceneSwap = useCallback(async () => {
         onDownload={handleDownloadGeneratedImage}
       />
       
-      <PromotionPopup 
-        isOpen={isPromoPopupOpen} 
-        onClose={() => setIsPromoPopupOpen(false)} 
-      />
-
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
