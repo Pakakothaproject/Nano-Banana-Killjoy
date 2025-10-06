@@ -103,22 +103,22 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload, ima
         </div>
       )}
       {preview ? (
-        <div className="relative w-full h-48 rounded-lg overflow-hidden neo-card !shadow-none !p-1">
+        <div className="relative w-full h-48 rounded-lg overflow-hidden border border-[var(--nb-border)]">
           <img src={preview} alt="Preview" className="w-full h-full object-contain rounded-md" />
            <button
             onClick={handleRemoveImage}
-            className="absolute top-2 right-2 neo-button neo-icon-button neo-button-danger !p-1.5"
+            className="absolute top-2 right-2 neo-button neo-icon-button neo-button-danger !p-1.5 bg-black/30 backdrop-blur-sm"
             aria-label="Remove image"
           >
             <XIcon />
           </button>
-          <div className="absolute bottom-0 left-0 right-0 bg-[var(--nb-border)] text-[var(--nb-bg)] text-xs text-center p-1 truncate">
+          <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs text-center p-1 truncate backdrop-blur-sm">
             {fileName}
           </div>
         </div>
       ) : (
         <label
-          className="flex flex-col items-center justify-center w-full h-48 border-3 border-[var(--nb-border)] border-dashed rounded-xl cursor-pointer bg-[var(--nb-surface-alt)] hover:bg-[var(--nb-accent)] transition-colors"
+          className="flex flex-col items-center justify-center w-full h-48 border-2 border-[var(--nb-border)] border-dashed rounded-xl cursor-pointer bg-[var(--nb-surface-alt)] hover:bg-[var(--nb-accent)]/10 transition-colors"
           onDragOver={handleDragOver}
           onDrop={handleDrop}
         >

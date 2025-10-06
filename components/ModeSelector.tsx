@@ -16,8 +16,8 @@ const ModeButton: React.FC<{
         onClick={onClick}
         aria-label={label}
         title={label}
-        className={`w-full flex flex-col items-center justify-center gap-1 p-2 rounded-xl transition-colors aspect-square ${
-            isActive ? 'bg-[var(--nb-primary)] text-[var(--nb-border)] dark:text-[var(--nb-bg)]' : 'hover:bg-[var(--nb-surface-alt)]'
+        className={`w-full flex flex-col items-center justify-center gap-1 p-2 rounded-xl transition-all aspect-square border ${
+            isActive ? 'bg-[var(--nb-primary)] text-white border-transparent shadow-md' : 'bg-[var(--nb-surface-alt)] hover:bg-[var(--nb-surface)] border-[var(--nb-border)]'
         }`}
     >
         <Icon className="w-6 h-6" />
@@ -27,7 +27,7 @@ const ModeButton: React.FC<{
 
 export const ModeSelector: React.FC<ModeSelectorProps> = ({ appMode, setAppMode }) => {
     return (
-        <div className="neo-card p-2 flex flex-col gap-2">
+        <div className="grid grid-cols-4 gap-2">
             <ModeButton label="Try-On" Icon={WandIcon} isActive={appMode === 'tryon'} onClick={() => setAppMode('tryon')} />
             <ModeButton label="Scene" Icon={FrameIcon} isActive={appMode === 'sceneswap'} onClick={() => setAppMode('sceneswap')} />
             <ModeButton label="Hair" Icon={ScissorsIcon} isActive={appMode === 'hairstyle'} onClick={() => setAppMode('hairstyle')} />

@@ -36,7 +36,6 @@ interface SceneSwapModeProps {
     swapStage: 'initial' | 'analyzed';
     setSwapStage: React.Dispatch<React.SetStateAction<'initial' | 'analyzed'>>;
     handleCompleteSceneSwap: () => void;
-    addLog: (message: string) => void;
     setError: (error: string | null) => void;
 }
 
@@ -69,7 +68,6 @@ export const SceneSwapMode: React.FC<SceneSwapModeProps> = ({
     swapStage,
     setSwapStage,
     handleCompleteSceneSwap,
-    addLog,
     setError,
 }) => {
     const isSceneSwapGenerateDisabled = !!loadingMessage || !originalModelImage || !environmentImage;
@@ -80,58 +78,49 @@ export const SceneSwapMode: React.FC<SceneSwapModeProps> = ({
         setSelectedPresetUrl(preset.imageUrl);
         setIsEnvironmentUrlLoading(true);
         setError(null);
-        addLog(`Loading preset scene: ${preset.name}`);
         try {
             const image = await fetchImageAsUploadedImage(preset.imageUrl);
             setEnvironmentImage(image);
             setSceneDescription(preset.analysis);
             setSwapStage('analyzed');
-            addLog('Preset loaded successfully.');
         } catch (err) {
             const errorMsg = `Failed to load preset image. Error: ${err instanceof Error ? err.message : 'Unknown error'}`;
             setError(errorMsg);
-            addLog(errorMsg);
         } finally {
             setIsEnvironmentUrlLoading(false);
         }
-    }, [addLog, setError, setEnvironmentImage, setIsEnvironmentUrlLoading, setSceneDescription, setSwapStage]);
+    }, [setError, setEnvironmentImage, setIsEnvironmentUrlLoading, setSceneDescription, setSwapStage]);
 
 
     const handleLoadModelUrl = useCallback(async () => {
         if (!modelImageUrl) return;
         setIsModelUrlLoading(true);
         setError(null);
-        addLog(`Loading model from URL: ${modelImageUrl}`);
         try {
             const image = await fetchImageAsUploadedImage(modelImageUrl);
             handleModelImageUpload(image);
-            addLog('Model loaded successfully from URL.');
         } catch (err) {
             const errorMsg = `Failed to load model from URL. Error: ${err instanceof Error ? err.message : 'Unknown error'}`;
             setError(errorMsg);
-            addLog(errorMsg);
         } finally {
             setIsModelUrlLoading(false);
         }
-    }, [modelImageUrl, setIsModelUrlLoading, setError, addLog, handleModelImageUpload]);
+    }, [modelImageUrl, setIsModelUrlLoading, setError, handleModelImageUpload]);
     
     const handleLoadEnvironmentUrl = useCallback(async () => {
         if (!environmentImageUrl) return;
         setIsEnvironmentUrlLoading(true);
         setError(null);
-        addLog(`Loading environment from URL: ${environmentImageUrl}`);
         try {
             const image = await fetchImageAsUploadedImage(environmentImageUrl);
             setEnvironmentImage(image);
-            addLog('Environment loaded successfully from URL.');
         } catch (err) {
             const errorMsg = `Failed to load environment from URL. Error: ${err instanceof Error ? err.message : 'Unknown error'}`;
             setError(errorMsg);
-            addLog(errorMsg);
         } finally {
             setIsEnvironmentUrlLoading(false);
         }
-    }, [environmentImageUrl, setIsEnvironmentUrlLoading, setError, addLog, setEnvironmentImage]);
+    }, [environmentImageUrl, setIsEnvironmentUrlLoading, setError, setEnvironmentImage]);
 
     if (swapStage === 'analyzed') {
         return (
@@ -199,7 +188,7 @@ export const SceneSwapMode: React.FC<SceneSwapModeProps> = ({
                     </button>
                 </div>
                 {showPresets && (
-                    <div className="grid grid-cols-3 gap-2 mt-2 max-h-48 overflow-y-auto animate-fade-in">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2 max-h-48 overflow-y-auto animate-fade-in">
                         {sceneSwapPresets.map(p => (
                             <button key={p.name} onClick={() => handlePresetSelect(p)} className={`rounded-lg overflow-hidden border-4 transition-colors ${selectedPresetUrl === p.imageUrl ? 'border-[var(--nb-primary)]' : 'border-transparent hover:border-[var(--nb-accent)]'}`}>
                                 <img src={p.imageUrl} alt={p.name} className="w-full h-24 object-cover" />

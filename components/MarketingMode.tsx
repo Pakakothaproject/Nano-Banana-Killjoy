@@ -87,7 +87,7 @@ export const MarketingMode: React.FC<MarketingModeProps> = ({
                         <div className="space-y-2 pt-2 animate-fade-in">
                             <div>
                                 <h4 className="font-bold text-xs mb-1 opacity-80">🍽️ FOR FOOD PRODUCTS</h4>
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     {marketingPresets.food.map(p => (
                                         <button key={p.name} onClick={() => handlePresetClick(p.prompt)} className="neo-button neo-button-secondary text-xs w-full h-full text-left justify-start !p-2">{p.name}</button>
                                     ))}
@@ -95,7 +95,7 @@ export const MarketingMode: React.FC<MarketingModeProps> = ({
                             </div>
                             <div>
                                 <h4 className="font-bold text-xs mb-1 opacity-80">💻 FOR TECH & PRODUCTS</h4>
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     {marketingPresets.tech.map(p => (
                                         <button key={p.name} onClick={() => handlePresetClick(p.prompt)} className="neo-button neo-button-secondary text-xs w-full h-full text-left justify-start !p-2">{p.name}</button>
                                     ))}
@@ -103,7 +103,7 @@ export const MarketingMode: React.FC<MarketingModeProps> = ({
                             </div>
                             <div>
                                 <h4 className="font-bold text-xs mb-1 opacity-80">🎨 CONCEPTS & BACKGROUNDS</h4>
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     {marketingPresets.concepts.map(p => (
                                         <button key={p.name} onClick={() => handlePresetClick(p.prompt)} className="neo-button neo-button-secondary text-xs w-full h-full text-left justify-start !p-2">{p.name}</button>
                                     ))}

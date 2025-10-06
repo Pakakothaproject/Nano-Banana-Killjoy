@@ -1,18 +1,15 @@
 import React, { useCallback } from 'react';
 import type { UploadedImage } from '../types';
 import { InputType } from '../types';
-import { AccordionSection } from './AccordionSection';
 import { ImageUploader } from './ImageUploader';
 import { TabButton } from './TabButton';
 import { presetTextPrompts, presetImages } from '../constants/presets';
-import { UserIcon, TShirtIcon, SparklesIcon, UsersIcon, CrosshairIcon, XIcon, LinkIcon, LockIcon, UnlockIcon, WandIcon } from './Icons';
+import { UsersIcon, CrosshairIcon, XIcon, LinkIcon, LockIcon, UnlockIcon, WandIcon, SparklesIcon } from './Icons';
 import { GenerationCountSelector } from './GenerationCountSelector';
 // FIX: Update import path for fetchImageAsUploadedImage from the refactored utils module.
 import { fetchImageAsUploadedImage } from '../utils/image';
 
 interface TryOnModeProps {
-    activeAccordion: 'model' | 'clothing' | 'style' | null;
-    setActiveAccordion: React.Dispatch<React.SetStateAction<'model' | 'clothing' | 'style' | null>>;
     originalModelImage: UploadedImage | null;
     handleModelImageUpload: (image: UploadedImage | null) => void;
     modelImage: UploadedImage | null;
@@ -20,7 +17,6 @@ interface TryOnModeProps {
     setModelImageUrl: (url: string) => void;
     isModelUrlLoading: boolean;
     setIsModelUrlLoading: (loading: boolean) => void;
-    addLog: (message: string) => void;
     setError: (error: string | null) => void;
     isFaceRestoreEnabled: boolean;
     setIsFaceRestoreEnabled: (enabled: boolean) => void;
@@ -53,8 +49,8 @@ interface TryOnModeProps {
 }
 
 export const TryOnMode: React.FC<TryOnModeProps> = ({
-    activeAccordion, setActiveAccordion, originalModelImage, handleModelImageUpload, modelImage, modelImageUrl, setModelImageUrl,
-    isModelUrlLoading, setIsModelUrlLoading, addLog, setError, isFaceRestoreEnabled, setIsFaceRestoreEnabled, isSelectingPerson,
+    originalModelImage, handleModelImageUpload, modelImage, modelImageUrl, setModelImageUrl,
+    isModelUrlLoading, setIsModelUrlLoading, setError, isFaceRestoreEnabled, setIsFaceRestoreEnabled, isSelectingPerson,
     setIsSelectingPerson, targetPersonPoint, setTargetPersonPoint, clothingImage, clothingText, setClothingText, activeTab,
     setActiveTab, clothingImageUrl, setClothingImageUrl, isUrlLoading, handleLoadFromUrlInput, handlePresetImageSelect,
     handleClothingImageUpload, showPresets, setShowPresets, selectedPresetUrl, isPoseLocked, setIsPoseLocked,
@@ -67,23 +63,21 @@ export const TryOnMode: React.FC<TryOnModeProps> = ({
         if (!modelImageUrl) return;
         setIsModelUrlLoading(true);
         setError(null);
-        addLog(`Loading model from URL: ${modelImageUrl}`);
         try {
             const image = await fetchImageAsUploadedImage(modelImageUrl);
             handleModelImageUpload(image);
-            addLog('Model loaded successfully from URL.');
         } catch (err) {
             const errorMsg = `Failed to load model from URL. Error: ${err instanceof Error ? err.message : 'Unknown error'}`;
             setError(errorMsg);
-            addLog(errorMsg);
         } finally {
             setIsModelUrlLoading(false);
         }
-    }, [modelImageUrl, setIsModelUrlLoading, setError, addLog, handleModelImageUpload]);
+    }, [modelImageUrl, setIsModelUrlLoading, setError, handleModelImageUpload]);
 
     return (
         <div className="space-y-4 animate-fade-in">
-            <AccordionSection Icon={UserIcon} title="1. Model" sectionId="model" activeSection={activeAccordion} setActiveSection={setActiveAccordion} isComplete={!!originalModelImage}>
+            <div className="step-card">
+                <h3 className="step-title"><span className="step-number">1</span> Model</h3>
                 <ImageUploader image={originalModelImage} onImageUpload={handleModelImageUpload} isLoading={isModelUrlLoading} />
                 <div className="flex items-center gap-2 mt-3">
                     <hr className="flex-grow border-t border-[var(--nb-border)] opacity-30" />
@@ -92,42 +86,15 @@ export const TryOnMode: React.FC<TryOnModeProps> = ({
                 </div>
                 <div className="flex gap-2 mt-3">
                     <input type="text" value={modelImageUrl} onChange={e => setModelImageUrl(e.target.value)} className="neo-input w-full" placeholder="Enter model image URL" />
-                    <button onClick={handleLoadModelUrl} disabled={isModelUrlLoading} className="neo-button neo-button-secondary"><LinkIcon /></button>
+                    <button onClick={handleLoadModelUrl} disabled={isModelUrlLoading} className="neo-button neo-icon-button neo-button-secondary"><LinkIcon /></button>
                 </div>
-                {originalModelImage && (
-                    <div className="space-y-4 pt-4">
-                        <div className="space-y-4 pt-4 border-t-2 border-[var(--nb-border)] border-dashed">
-                            <div className="flex items-center justify-between">
-                                <span id="face-restore-label" className="flex flex-col pr-4">
-                                    <span className="font-semibold">Restore Original Face (Turn on only for still camera with just detail changes)</span>
-                                </span>
-                                <button type="button" role="switch" aria-checked={isFaceRestoreEnabled} aria-labelledby="face-restore-label" onClick={() => setIsFaceRestoreEnabled(!isFaceRestoreEnabled)}
-                                    className={`${isFaceRestoreEnabled ? 'bg-[var(--nb-primary)]' : 'bg-[var(--nb-surface-alt)]'} relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-[var(--nb-border)] transition-colors duration-200 ease-in-out`}>
-                                    <span aria-hidden="true" className={`${isFaceRestoreEnabled ? 'translate-x-5' : 'translate-x-0'} pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out border border-[var(--nb-border)]`} />
-                                </button>
-                            </div>
-                            <div>
-                                <p className="font-semibold flex items-center gap-2 text-base"><UsersIcon /> Multi-Person Selection</p>
-                                <p className="text-sm opacity-70 mb-2">If your photo has multiple people, click to select who to style.</p>
-                                <div className="flex gap-2">
-                                    <button onClick={() => setIsSelectingPerson(!isSelectingPerson)} className={`w-full neo-button text-sm ${isSelectingPerson ? 'neo-button-danger' : 'neo-button-secondary'}`}>
-                                        <CrosshairIcon /> {isSelectingPerson ? 'Cancel Selection' : 'Select Person'}
-                                    </button>
-                                    {targetPersonPoint && (
-                                        <button onClick={() => setTargetPersonPoint(null)} className="neo-button neo-icon-button neo-button-secondary" aria-label="Clear selected person"><XIcon /></button>
-                                    )}
-                                </div>
-                                {targetPersonPoint && <p className="text-xs text-center font-semibold text-[var(--nb-primary)] animate-fade-in mt-2">✓ Person selected. Style will be applied here.</p>}
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </AccordionSection>
+            </div>
 
-            <AccordionSection Icon={TShirtIcon} title="2. Clothing" sectionId="clothing" activeSection={activeAccordion} setActiveSection={setActiveAccordion} isEnabled={!!originalModelImage} isComplete={!!clothingImage || (activeTab === InputType.TEXT && !!clothingText)}>
+            <div className="step-card">
+                 <h3 className="step-title"><span className="step-number">2</span> Clothing</h3>
                 <div className="space-y-4">
                     <p className="text-xs opacity-70 italic text-center px-2 py-1">
-                        Use only when reference and model images are similar. Otherwise, use Scene Swap to try on clothes.
+                        Use only when reference and model images are similar. Otherwise, use Scene Swap.
                     </p>
                     <div className="neo-tab-container">
                         <TabButton label="Describe" isActive={activeTab === InputType.TEXT} onClick={() => setActiveTab(InputType.TEXT)} />
@@ -136,7 +103,7 @@ export const TryOnMode: React.FC<TryOnModeProps> = ({
                     {activeTab === InputType.TEXT ? (
                     <div>
                         <p className="opacity-80 mb-2 text-sm">Describe the design in detail.</p>
-                        <textarea value={clothingText} onChange={(e) => {setClothingText(e.target.value); if(e.target.value) setActiveAccordion('style');}} 
+                        <textarea value={clothingText} onChange={(e) => {setClothingText(e.target.value);}} 
                          className="neo-textarea" placeholder="e.g., a black sequin mini dress" />
                         <div className="mt-2 text-center">
                             <button onClick={() => setShowPresets(!showPresets)} className="text-sm font-semibold opacity-70 hover:opacity-100">
@@ -146,7 +113,7 @@ export const TryOnMode: React.FC<TryOnModeProps> = ({
                         {showPresets && (
                             <div className="grid grid-cols-2 gap-2 mt-2 animate-fade-in">
                                 {presetTextPrompts.map(p => (
-                                    <button key={p.name} onClick={() => {setClothingText(p.prompt); setActiveAccordion('style');}} className="neo-button neo-button-secondary text-xs w-full">{p.name}</button>
+                                    <button key={p.name} onClick={() => {setClothingText(p.prompt);}} className="neo-button neo-button-secondary text-xs w-full">{p.name}</button>
                                 ))}
                             </div>
                         )}
@@ -162,7 +129,7 @@ export const TryOnMode: React.FC<TryOnModeProps> = ({
                             </div>
                             <div className="flex gap-2">
                                 <input type="text" value={clothingImageUrl} onChange={e => setClothingImageUrl(e.target.value)} className="neo-input w-full" placeholder="Enter image URL" />
-                                <button onClick={handleLoadFromUrlInput} disabled={isUrlLoading} className="neo-button neo-button-secondary"><LinkIcon /></button>
+                                <button onClick={handleLoadFromUrlInput} disabled={isUrlLoading} className="neo-button neo-icon-button neo-button-secondary"><LinkIcon /></button>
                             </div>
                              <div className="text-center">
                                 <button onClick={() => setShowPresets(!showPresets)} className="text-sm font-semibold opacity-70 hover:opacity-100">
@@ -170,7 +137,7 @@ export const TryOnMode: React.FC<TryOnModeProps> = ({
                                 </button>
                             </div>
                             {showPresets && (
-                                <div className="grid grid-cols-3 gap-2 mt-2 max-h-48 overflow-y-auto animate-fade-in">
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2 max-h-48 overflow-y-auto animate-fade-in">
                                     {presetImages.map(p => (
                                         <button key={p.name} onClick={() => handlePresetImageSelect(p.url)} className={`rounded-lg overflow-hidden border-4 transition-colors ${selectedPresetUrl === p.url ? 'border-[var(--nb-primary)]' : 'border-transparent hover:border-[var(--nb-accent)]'}`}>
                                             <img src={p.url} alt={p.name} className="w-full h-24 object-cover" />
@@ -181,18 +148,19 @@ export const TryOnMode: React.FC<TryOnModeProps> = ({
                         </div>
                     )}
                 </div>
-            </AccordionSection>
+            </div>
             
-            <AccordionSection Icon={WandIcon} title="3. Style" sectionId="style" activeSection={activeAccordion} setActiveSection={setActiveAccordion} isEnabled={!!originalModelImage && !clothingInputMissing} isComplete={false}>
+             <div className="step-card">
+                <h3 className="step-title"><span className="step-number">3</span> Style &amp; Generate</h3>
                  <div className="space-y-4">
                      <div className="flex items-center justify-between">
                         <span id="pose-lock-label" className="flex flex-col pr-4">
                             <span className="font-semibold flex items-center gap-2">{isPoseLocked ? <LockIcon /> : <UnlockIcon />} {isPoseLocked ? 'Pose Locked' : 'Creative Mode'}</span>
-                            <span className="text-sm opacity-70">{isPoseLocked ? 'Keeps original pose & background.' : 'Generates new pose & scene.'}</span>
+                            <span className="text-sm opacity-70">{isPoseLocked ? 'Keeps original pose.' : 'Generates new pose.'}</span>
                         </span>
                         <button type="button" role="switch" aria-checked={isPoseLocked} aria-labelledby="pose-lock-label" onClick={() => setIsPoseLocked(!isPoseLocked)}
-                            className={`${isPoseLocked ? 'bg-[var(--nb-primary)]' : 'bg-[var(--nb-accent)]'} relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-[var(--nb-border)] transition-colors duration-200 ease-in-out`}>
-                            <span aria-hidden="true" className={`${isPoseLocked ? 'translate-x-5' : 'translate-x-0'} pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out border border-[var(--nb-border)]`} />
+                            className={`${isPoseLocked ? 'bg-[var(--nb-primary)]' : 'bg-[var(--nb-accent)]'} relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out`}>
+                            <span aria-hidden="true" className={`${isPoseLocked ? 'translate-x-5' : 'translate-x-0'} pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`} />
                         </button>
                     </div>
                     
@@ -201,16 +169,38 @@ export const TryOnMode: React.FC<TryOnModeProps> = ({
                     </div>
 
                     {originalModelImage && (
-                        <div className="space-y-2 pt-4 border-t-2 border-dashed border-[var(--nb-border)]">
-                            <p className="text-sm opacity-80 text-center">For best results, prepare your model to remove existing clothing first.</p>
-                            <button onClick={handlePrepareModel} disabled={isPreparingModel} className="neo-button neo-button-accent">
-                                <SparklesIcon /> {isPreparingModel ? 'Preparing...' : 'Prepare Model (Optional)'}
+                        <div className="space-y-3 pt-4 border-t-2 border-dashed border-[var(--nb-border)]">
+                            <p className="text-sm font-semibold">Advanced Options</p>
+                            <div className="flex items-center justify-between">
+                                <span id="face-restore-label" className="flex flex-col pr-4">
+                                    <span className="font-semibold">Restore Original Face</span>
+                                     <span className="text-sm opacity-70">Use for minor edits.</span>
+                                </span>
+                                <button type="button" role="switch" aria-checked={isFaceRestoreEnabled} aria-labelledby="face-restore-label" onClick={() => setIsFaceRestoreEnabled(!isFaceRestoreEnabled)}
+                                    className={`${isFaceRestoreEnabled ? 'bg-[var(--nb-primary)]' : 'bg-[var(--nb-surface-alt)]'} relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-[var(--nb-border)] transition-colors duration-200 ease-in-out`}>
+                                    <span aria-hidden="true" className={`${isFaceRestoreEnabled ? 'translate-x-5' : 'translate-x-0'} pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out border border-[var(--nb-border)]`} />
+                                </button>
+                            </div>
+                            <div>
+                                <p className="font-semibold flex items-center gap-2 text-base"><UsersIcon /> Multi-Person Selection</p>
+                                <p className="text-sm opacity-70 mb-2">If your photo has multiple people, tap to select who to style.</p>
+                                <div className="flex gap-2">
+                                    <button onClick={() => setIsSelectingPerson(!isSelectingPerson)} className={`w-full neo-button text-sm ${isSelectingPerson ? 'neo-button-danger' : 'neo-button-secondary'}`}>
+                                        <CrosshairIcon /> {isSelectingPerson ? 'Cancel Selection' : 'Select Person'}
+                                    </button>
+                                    {targetPersonPoint && (
+                                        <button onClick={() => setTargetPersonPoint(null)} className="neo-button neo-icon-button neo-button-secondary" aria-label="Clear selected person"><XIcon /></button>
+                                    )}
+                                </div>
+                                {targetPersonPoint && <p className="text-xs text-center font-semibold text-[var(--nb-primary)] animate-fade-in mt-2">✓ Person selected.</p>}
+                            </div>
+                             <button onClick={handlePrepareModel} disabled={isPreparingModel} className="w-full neo-button neo-button-accent">
+                                <WandIcon /> {isPreparingModel ? 'Preparing...' : 'Prepare Model (Optional)'}
                             </button>
                         </div>
                     )}
                  </div>
-            </AccordionSection>
-
+            </div>
              <button
                 onClick={handleGenerate}
                 disabled={isGenerateButtonDisabled}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { TabButton } from './TabButton';
-import { WandIcon, SlidersIcon, CameraIcon, MessageSquareIcon, FilmIcon } from './Icons';
+import { WandIcon, SlidersIcon, CameraIcon, MessageSquareIcon, FilmIcon, RefreshCcwIcon } from './Icons';
 import type { UploadedImage } from '../types';
 import type { Bubble } from '../App';
 import { EditTab } from './studio/EditTab';
@@ -56,22 +56,22 @@ interface StudioPanelProps {
     loadingMessage: string | null;
     isRephrasingEdit: boolean;
     handleRephraseEditPrompt: () => void;
+    handleUseAsModel: () => void;
 }
 
 export const StudioPanel: React.FC<StudioPanelProps> = (props) => {
 
     return (
         <div className="space-y-4 animate-fade-in">
-             <div className="text-center py-2">
-                <span className="font-bold text-sm opacity-60">STUDIO</span>
-            </div>
-            <div className="neo-card p-4 space-y-4">
-                <div className="neo-tab-container !p-1.5">
-                    <TabButton Icon={WandIcon} label="Edit" isActive={props.activeStudioTab === 'edit'} onClick={() => props.setActiveStudioTab('edit')} />
-                    <TabButton Icon={SlidersIcon} label="Adjust" isActive={props.activeStudioTab === 'adjust'} onClick={() => props.setActiveStudioTab('adjust')} />
-                    <TabButton Icon={CameraIcon} label="Effects" isActive={props.activeStudioTab === 'effects'} onClick={() => props.setActiveStudioTab('effects')} />
-                    <TabButton Icon={MessageSquareIcon} label="Overlays" isActive={props.activeStudioTab === 'overlays'} onClick={() => props.setActiveStudioTab('overlays')} />
-                    <TabButton Icon={FilmIcon} label="Animate" isActive={props.activeStudioTab === 'animate'} onClick={() => props.setActiveStudioTab('animate')} />
+            <div className="space-y-4">
+                <div className="overflow-x-auto">
+                    <div className="neo-tab-container !p-1 inline-flex min-w-full">
+                        <TabButton Icon={WandIcon} label="Edit" isActive={props.activeStudioTab === 'edit'} onClick={() => props.setActiveStudioTab('edit')} />
+                        <TabButton Icon={SlidersIcon} label="Adjust" isActive={props.activeStudioTab === 'adjust'} onClick={() => props.setActiveStudioTab('adjust')} />
+                        <TabButton Icon={CameraIcon} label="Effects" isActive={props.activeStudioTab === 'effects'} onClick={() => props.setActiveStudioTab('effects')} />
+                        <TabButton Icon={MessageSquareIcon} label="Overlays" isActive={props.activeStudioTab === 'overlays'} onClick={() => props.setActiveStudioTab('overlays')} />
+                        <TabButton Icon={FilmIcon} label="Animate" isActive={props.activeStudioTab === 'animate'} onClick={() => props.setActiveStudioTab('animate')} />
+                    </div>
                 </div>
 
                 {props.activeStudioTab === 'edit' && <EditTab {...props} />}
@@ -80,6 +80,11 @@ export const StudioPanel: React.FC<StudioPanelProps> = (props) => {
                 {props.activeStudioTab === 'overlays' && <OverlaysTab {...props} />}
                 {props.activeStudioTab === 'animate' && <AnimateTab {...props} />}
                 
+                <div className="mt-4 pt-4 border-t border-[var(--nb-border)]">
+                    <button onClick={props.handleUseAsModel} className="w-full neo-button neo-button-secondary">
+                        <RefreshCcwIcon /> Use as New Model
+                    </button>
+                </div>
             </div>
         </div>
     );
