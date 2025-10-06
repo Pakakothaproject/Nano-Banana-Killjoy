@@ -33,6 +33,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <div>
                         <label htmlFor="api-key-input" className="font-semibold mb-2 block">Your Gemini API Key</label>
                         <input id="api-key-input" type="password" value={tempApiKey} onChange={(e) => setTempApiKey(e.target.value)} className="neo-input" placeholder="Enter your API key here" />
+                        <p className="text-xs opacity-70 mt-2">
+                            Needs to have billing enabled for it to work. You can enable billing from Google AI Studio. The key is saved locally in your browser and never sent anywhere else.
+                        </p>
                     </div>
 
                     <div className="flex justify-end items-center gap-3 pt-2">
